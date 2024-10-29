@@ -1,6 +1,6 @@
 const projection = d3.geoMercator()
-    .scale(50000)  // Increase scale for a smaller area
-    .translate([310, 300])
+    .scale(75000)  // Increase scale for a smaller area
+    .translate([310, 330]) // Adjusted translate to push the map slightly below
     .center([103.851959, 1.290270]); // Singapore's approximate central coordinates
 
 const geoGenerator = d3.geoPath()
@@ -16,6 +16,16 @@ function handleMouseover(e, d) {
         .style('display', 'inline')
         .style('left', `${e.clientX}px`)
         .style('top', `${e.clientY}px`);
+
+    // Adjust tooltip position to be within the card
+    const cardRect = document.getElementById('content').getBoundingClientRect();
+    const tooltipRect = tooltip.node().getBoundingClientRect();
+    if (tooltipRect.right > cardRect.right) {
+        tooltip.style('left', `${e.clientX - (tooltipRect.width + 10)}px`);
+    }
+    if (tooltipRect.bottom > cardRect.bottom) {
+        tooltip.style('top', `${e.clientY - (tooltipRect.height + 10)}px`);
+    }
 
     d3.select('#content .bounding-box rect')
         .attr('x', bounds[0][0])

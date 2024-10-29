@@ -1,0 +1,33 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 14px;
+    color: #333;
+}
+
+#content .info {
+    height: auto; /* Make the tooltip height responsive to long text */
+    padding: 5px;
+    background-color: #f7f7f7;
+    border: 1px solid #ddd;
+    display: none; /* Initially hide the info box */
+    position: absolute;
+    z-index: 1000;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+#content .map path {
+    fill: #aaa;
+    stroke: #fff;
+    stroke-width: 0.5;
+}
+
+#content .bounding-box rect {
+    fill: none;
+    stroke: #333;
+    stroke-dasharray: 2, 1;
+}
+
+#content .centroid circle {
+    fill: red;
+}
