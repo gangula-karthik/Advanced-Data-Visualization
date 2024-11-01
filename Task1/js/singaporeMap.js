@@ -1,31 +1,24 @@
 const projection = d3.geoMercator()
-    .scale(75000)  // Increase scale for a smaller area
-    .translate([310, 330]) // Adjusted translate to push the map slightly below
-    .center([103.851959, 1.290270]); // Singapore's approximate central coordinates
+    .scale(80000)
+    .translate([310, 330])
+    .center([103.851959, 1.290270]);
 
-const geoGenerator = d3.geoPath()
-    .projection(projection);
+const geoGenerator = d3.geoPath().projection(projection);
 
 function handleMouseover(e, d) {
-    const pixelArea = geoGenerator.area(d);
+    const { planning_area, district } = d.properties;
+    const pixelArea = geoGenerator.area(d).toFixed(1);
+    const measure = geoGenerator.measure(d).toFixed(1);
     const bounds = geoGenerator.bounds(d);
     const centroid = geoGenerator.centroid(d);
-    const measure = geoGenerator.measure(d);
+    
     const tooltip = d3.select('#content .info')
-        .text(`${d.properties.planning_area} (${d.properties.district}) [area = ${pixelArea.toFixed(1)} measure = ${measure.toFixed(1)}]`)
+        .text(`${planning_area} (${district}) [area = ${pixelArea} measure = ${measure}]`)
         .style('display', 'inline')
         .style('left', `${e.clientX}px`)
         .style('top', `${e.clientY}px`);
 
-    // Adjust tooltip position to be within the card
-    const cardRect = document.getElementById('content').getBoundingClientRect();
-    const tooltipRect = tooltip.node().getBoundingClientRect();
-    if (tooltipRect.right > cardRect.right) {
-        tooltip.style('left', `${e.clientX - (tooltipRect.width + 10)}px`);
-    }
-    if (tooltipRect.bottom > cardRect.bottom) {
-        tooltip.style('top', `${e.clientY - (tooltipRect.height + 10)}px`);
-    }
+    adjustTooltipPosition(e, tooltip);
 
     d3.select('#content .bounding-box rect')
         .attr('x', bounds[0][0])
@@ -34,37 +27,62 @@ function handleMouseover(e, d) {
         .attr('height', bounds[1][1] - bounds[0][1]);
 
     d3.select('#content .centroid')
-        .attr('transform', 'translate(' + centroid + ')')
+        .attr('transform', `translate(${centroid})`)
         .style('display', 'inline');
 }
 
 function handleMouseout() {
-    d3.select('#content .info')
-        .style('display', 'none');
+    d3.select('#content .info').style('display', 'none');
+}
+
+function adjustTooltipPosition(e, tooltip) {
+    const cardRect = document.getElementById('content').getBoundingClientRect();
+    const tooltipRect = tooltip.node().getBoundingClientRect();
+    
+    let left = e.clientX;
+    let top = e.clientY;
+
+    // Adjust position to keep the tooltip inside the card horizontally
+    if (tooltipRect.right > cardRect.right) {
+        left = e.clientX - (tooltipRect.width + 10);
+    }
+    if (tooltipRect.left < cardRect.left) {
+        left = cardRect.left;
+    }
+
+    // Adjust position to keep the tooltip inside the card vertically
+    if (tooltipRect.bottom > cardRect.bottom) {
+        top = e.clientY - (tooltipRect.height + 10);
+    }
+    if (tooltipRect.top < cardRect.top) {
+        top = cardRect.top;
+    }
+
+    // Apply calculated position
+    tooltip.style('left', `${left}px`)
+        .style('top', `${top}px`)
+        .style('max-width', `${cardRect.width}px`)
+        .style('max-height', `${cardRect.height}px`)
+        .style('overflow', 'auto');
 }
 
 function update(geojson) {
-    const u = d3.select('#content g.map')
+    const paths = d3.select('#content g.map')
         .selectAll('path')
-        .data(geojson.features);
-
-    u.enter()
-        .append('path')
+        .data(geojson.features)
+        .join('path')
         .attr('d', geoGenerator)
         .on('mouseover', handleMouseover)
         .on('mouseout', handleMouseout)
         .style('cursor', 'pointer');
 
-    u.exit().remove();
+    return paths;
 }
 
 d3.json('./data/district_and_planning_area.geojson')
-    .then(function (json) {
-        update(json);
-        console.log(json)
+    .then(geojson => {
+        update(geojson);
     })
-    .catch(function (error) {
-        console.error("Error loading the GeoJSON data: ", error);
-        d3.select('#content .info')
-            .text('Failed to load Singapore map data');
+    .catch(error => {
+        console.error('Error loading the geojson file:', error);
     });
