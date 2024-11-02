@@ -1,4 +1,4 @@
-function DonutChart(divId, data) {
+export function DonutChart(divId, data) {
     // Set smaller dimensions for the donut chart
     var width = 200,  // Set a fixed small width for the donut
         height = 200, // Set a fixed small height for the donut
