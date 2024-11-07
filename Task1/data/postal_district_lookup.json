@@ -1,0 +1,223 @@
+{
+  "1": {
+    "Postal Sectors": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "General Location": "Raffles Place, Cecil, Marina, People's Park"
+  },
+  "2": {
+    "Postal Sectors": [
+      "7",
+      "8"
+    ],
+    "General Location": "Anson, Tanjong Pagar"
+  },
+  "3": {
+    "Postal Sectors": [
+      "14",
+      "15",
+      "16"
+    ],
+    "General Location": "Queenstown, Tiong Bahru"
+  },
+  "4": {
+    "Postal Sectors": [
+      "9",
+      "10"
+    ],
+    "General Location": "Telok Blangah, Harbourfront"
+  },
+  "5": {
+    "Postal Sectors": [
+      "11",
+      "12",
+      "13"
+    ],
+    "General Location": "Pasir Panjang, Hong Leong Garden, Clementi New Town"
+  },
+  "6": {
+    "Postal Sectors": [
+      "17"
+    ],
+    "General Location": "High Street, Beach Road (part)"
+  },
+  "7": {
+    "Postal Sectors": [
+      "18",
+      "19"
+    ],
+    "General Location": "Middle Road, Golden Mile"
+  },
+  "8": {
+    "Postal Sectors": [
+      "20",
+      "21"
+    ],
+    "General Location": "Little India"
+  },
+  "9": {
+    "Postal Sectors": [
+      "22",
+      "23"
+    ],
+    "General Location": "Orchard, Cairnhill, River Valley"
+  },
+  "10": {
+    "Postal Sectors": [
+      "24",
+      "25",
+      "26",
+      "27"
+    ],
+    "General Location": "Ardmore, Bukit Timah, Holland Road, Tanglin"
+  },
+  "11": {
+    "Postal Sectors": [
+      "28",
+      "29",
+      "30"
+    ],
+    "General Location": "Watten Estate, Novena, Thomson"
+  },
+  "12": {
+    "Postal Sectors": [
+      "31",
+      "32",
+      "33"
+    ],
+    "General Location": "Balestier, Toa Payoh, Serangoon"
+  },
+  "13": {
+    "Postal Sectors": [
+      "34",
+      "35",
+      "36",
+      "37"
+    ],
+    "General Location": "Macpherson, Braddell"
+  },
+  "14": {
+    "Postal Sectors": [
+      "38",
+      "39",
+      "40",
+      "41"
+    ],
+    "General Location": "Geylang, Eunos"
+  },
+  "15": {
+    "Postal Sectors": [
+      "42",
+      "43",
+      "44",
+      "45"
+    ],
+    "General Location": "Katong, Joo Chiat, Amber Road"
+  },
+  "16": {
+    "Postal Sectors": [
+      "46",
+      "47",
+      "48"
+    ],
+    "General Location": "Bedok, Upper East Coast, Eastwood, Kew Drive"
+  },
+  "17": {
+    "Postal Sectors": [
+      "49",
+      "50",
+      "81"
+    ],
+    "General Location": "Loyang, Changi"
+  },
+  "18": {
+    "Postal Sectors": [
+      "51",
+      "52"
+    ],
+    "General Location": "Tampines, Pasir Ris"
+  },
+  "19": {
+    "Postal Sectors": [
+      "53",
+      "54",
+      "55",
+      "82"
+    ],
+    "General Location": "Serangoon Garden, Hougang, Punggol"
+  },
+  "20": {
+    "Postal Sectors": [
+      "56",
+      "57"
+    ],
+    "General Location": "Bishan, Ang Mo Kio"
+  },
+  "21": {
+    "Postal Sectors": [
+      "58",
+      "59"
+    ],
+    "General Location": "Upper Bukit Timah, Clementi Park, Ulu Pandan"
+  },
+  "22": {
+    "Postal Sectors": [
+      "60",
+      "61",
+      "62",
+      "63",
+      "64"
+    ],
+    "General Location": "Jurong"
+  },
+  "23": {
+    "Postal Sectors": [
+      "65",
+      "66",
+      "67",
+      "68"
+    ],
+    "General Location": "Hillview, Dairy Farm, Bukit Panjang, Choa Chu Kang"
+  },
+  "24": {
+    "Postal Sectors": [
+      "69",
+      "70",
+      "71"
+    ],
+    "General Location": "Lim Chu Kang, Tengah"
+  },
+  "25": {
+    "Postal Sectors": [
+      "72",
+      "73"
+    ],
+    "General Location": "Kranji, Woodgrove"
+  },
+  "26": {
+    "Postal Sectors": [
+      "77",
+      "78"
+    ],
+    "General Location": "Upper Thomson, Springleaf"
+  },
+  "27": {
+    "Postal Sectors": [
+      "75",
+      "76"
+    ],
+    "General Location": "Yishun, Sembawang"
+  },
+  "28": {
+    "Postal Sectors": [
+      "79",
+      "80"
+    ],
+    "General Location": "Seletar"
+  }
+}
