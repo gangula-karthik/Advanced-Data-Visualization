@@ -1,80 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singapore Map Visualization</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
-    <div id="content">
-        <div class="info">Hover over a district</div>
-        <div id="my_dataviz"></div>
-    </div>
-
+    <meta charset="utf-8">
+    <!-- Load d3.js -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-</body>
+</head>
+<body>
+    <!-- Create a div where the graph will take place -->
+    <div id="my_dataviz"></div>
 
-<script>
+    <script>
+
     // Set the dimensions and margins of the graph
-    var margin = { top: 30, right: 30, bottom: 70, left: 60 },
+    var margin = {top: 10, right: 30, bottom: 80, left: 40},
         width = 460 - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom;
+        height = 380 - margin.top - margin.bottom;
 
-    // Append the SVG object to the #my_dataviz div
+    // Append the svg object to the body of the page
     var svg = d3.select("#my_dataviz")
-        .append("svg")
+      .append("svg")
         .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + marinmargin.bottom)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform",
+              "translate(" + margin.left + "," + margin.top + ")");
 
-    // Parse the data
-    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/7_OneCatOneNum_header.csv").then(data => {
+    // Load the data using d3.csv and process it
+    d3.csv("./data/CommercialTrans_201910 to 202410.csv").then(function(data) {
 
-        // Convert the Value field to a number
-        data.forEach(d => {
-            d.Value = +d.Value;
-        });
+      // Convert the "Unit Price ($SQM)" values to numbers
+      data.forEach(function(d) {
+        // Try to parse the unitPrice and log for debugging
+        d.unitPrice = parseFloat(d["Unit Price ($ PSM)"].replace(/,/g, ''));
+        if (isNaN(d.unitPrice)) {
+          console.error("Invalid number:", d["Unit Price ($ PSM)"]);
+        }
+      });
 
-        // X axis
-        var x = d3.scaleBand()
-            .range([0, width])
-            .domain(data.map(d => d.Country)) // Use an array of country names for the domain
-            .padding(0.2);
+      // Log the entire data array for inspection
+      console.log(data);
 
-        svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x))
-            .selectAll("text")
-            .attr("transform", "translate(-10,0)rotate(-45)")
-            .style("text-anchor", "end");
+      // X axis: scale and draw
+      var x = d3.scaleLinear()
+          .domain([d3.min(data, d => d.unitPrice), d3.max(data, d => d.unitPrice)])
+          .range([0, width]);
+      svg.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .selectAll("text")
+            .attr("transform", "rotate(45)")
+            .style("text-anchor", "start");
 
-        // Y axis
-        var y = d3.scaleLinear()
-            .domain([0, d3.max(data, d => d.Value)]) // Use max value from data for dynamic scaling
-            .range([height, 0]);
+      // Set the parameters for the histogram
+      var histogram = d3.histogram()
+          .value(function(d) { return d.unitPrice; })   // Extract the value
+          .domain(x.domain())  // Domain of the graphic
+          .thresholds(x.ticks(25)); // Number of bins
 
-        svg.append("g")
-            .call(d3.axisLeft(y));
+      // Apply the function to the data to get the bins
+      var bins = histogram(data);
 
-        // Bars
-        svg.selectAll("rect")
-            .data(data)
-            .enter()
-            .append("rect")
-            .attr("x", d => x(d.Country))
-            .attr("y", d => y(d.Value))
-            .attr("width", x.bandwidth())
-            .attr("height", d => height - y(d.Value))
-            .attr("fill", "#69b3a2");
+      // Log the frequency of each bin
+      bins.forEach(function(bin, index) {
+        console.log(`Bin ${index + 1}: [${bin.x0}, ${bin.x1}) - Frequency: ${bin.length}`);
+      });
 
-    }).catch(error => {
-        console.error("Error loading or parsing data:", error);
+      // Y axis: scale and draw based on frequency
+      var y = d3.scaleLinear()
+          .range([height, 0])
+          .domain([0, d3.max(bins, function(d) { return d.length; })]);  // Frequency of data points in each bin
+          
+      svg.append("g")
+          .call(d3.axisLeft(y));
+
+      // Append the bar rectangles to the svg element
+      svg.selectAll("rect")
+          .data(bins)
+          .enter()
+          .append("rect")
+            .attr("x", 1)
+            .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+            .attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
+            .attr("height", function(d) { return height - y(d.length); })
+            .style("fill", "#69b3a2");
+
     });
-
-</script>
-
+    </script>
+</body>
 </html>
