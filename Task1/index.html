@@ -113,6 +113,47 @@
         .chat-input button:hover {
             background-color: #4338ca;
         }
+
+        .info {
+            position: absolute;
+            background-color: #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+            /* Hidden by default */
+            z-index: 1000;
+            /* Make sure it appears above other elements */
+        }
+
+        #timeline-brush {
+            width: 100%;
+            height: 80px;
+            /* Fixed height for the brush component */
+            margin-top: 20px;
+            border: 1px solid #333;
+            /* Subtle border for a clean look */
+            border-radius: 8px;
+            /* Smooth rounded corners */
+            background-color: #2b2b2b;
+            /* Solid lighter background color */
+            overflow: hidden;
+            /* Clip overflowing content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            /* Soft shadow for subtle depth */
+        }
+
+        #timeline-brush svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            /* Ensure the SVG also has rounded corners */
+        }
     </style>
 </head>
 
@@ -128,31 +169,35 @@
     <div class="container mx-auto mt-6 px-4">
         <!-- Filter Section -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Property Name Filter -->
             <div>
-                <label for="dateRange" class="text-sm font-medium">Date Range</label>
-                <select id="dateRange" class="full-dark-select mt-1 block w-full p-2 rounded-lg border">
-                    <option value="all">All Dates</option>
-                    <option value="last6months">Last 6 Months</option>
-                    <option value="last1year">Last 1 Year</option>
-                    <option value="last5years">Last 5 Years</option>
+                <label for="propertyName" class="text-sm font-medium">Property Name</label>
+                <select id="propertyName" class="full-dark-select mt-1 block w-full p-2 rounded-lg border">
+                    <option value="all">All Properties</option>
+                    <option value="property1">Property 1</option>
+                    <option value="property2">Property 2</option>
+                    <option value="property3">Property 3</option>
+                    <!-- Add more properties as needed -->
                 </select>
             </div>
+
+            <!-- District Name Filter -->
             <div>
-                <label for="propertyType" class="text-sm font-medium">Property Type</label>
-                <select id="propertyType" class="full-dark-select mt-1 block w-full p-2 rounded-lg border">
-                    <option value="all">All Types</option>
-                    <option value="office">Office</option>
-                    <option value="retail">Retail</option>
-                    <option value="industrial">Industrial</option>
-                </select>
-            </div>
-            <div>
-                <label for="postalDistrict" class="text-sm font-medium">Postal District</label>
-                <select id="postalDistrict" class="full-dark-select mt-1 block w-full p-2 rounded-lg border">
+                <label for="districtName" class="text-sm font-medium">District Name</label>
+                <select id="districtName" class="full-dark-select mt-1 block w-full p-2 rounded-lg border">
                     <option value="all">All Districts</option>
-                    <option value="7">District 7 - Middle Road, Golden Mile</option>
-                    <option value="9">District 9 - Orchard, River Valley</option>
+                    <option value="district7">District 7 - Middle Road, Golden Mile</option>
+                    <option value="district9">District 9 - Orchard, River Valley</option>
+                    <!-- Add more districts as needed -->
                 </select>
+            </div>
+
+            <!-- Tenure Filter (Range Slider) -->
+            <div>
+                <label for="tenureRange" class="text-sm font-medium">Tenure (Years)</label>
+                <input type="range" id="tenureRange" class="full-dark-select mt-1 block w-full" min="0" max="999"
+                    step="1">
+                <div class="text-xs mt-1 text-gray-400">0 - 999 Years</div>
             </div>
         </div>
 
@@ -161,8 +206,10 @@
             <!-- Map Section -->
             <div class="full-dark-card card rounded-lg shadow-md p-6">
                 <h5 class="text-lg font-semibold mb-4">Unit Price Distribution by Postal District and Property Type</h5>
-                <div id="content" class="flex justify-center items-center">
-                    <svg id="map" class="w-full h-64" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet">
+
+                <!-- Map Container -->
+                <div id="content" style="width: 100%; height: 400px; position: relative;">
+                    <svg width="100%" height="100%">
                         <g class="map"></g>
                         <g class="bounding-box">
                             <rect></rect>
@@ -171,7 +218,11 @@
                             <circle r="4"></circle>
                         </g>
                     </svg>
+                    <div class="info" style="position: absolute; display: none;"></div>
                 </div>
+
+                <!-- Timeline Brush Component -->
+                <div id="timeline-brush" style="width: 100%; height: 80px; margin-top: 20px;"></div>
             </div>
 
             <!-- Right Section -->
@@ -215,8 +266,7 @@
     <!-- External JS libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="chatbot.js"></script>
-    <script src="geoHeatMap.js"></script>
-    <script src="main.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 
 </html>

@@ -1,22 +1,20 @@
-export class MapVisualization {
+export default class MapVisualization {
     constructor(svgContainerId, geojsonPath, csvPath, lookupJsonPath) {
-        // Initialize properties
         this.svgContainerId = svgContainerId;
         this.geojsonPath = geojsonPath;
         this.csvPath = csvPath;
         this.lookupJsonPath = lookupJsonPath;
         this.projection = d3.geoMercator()
-            .scale(80000)
-            .translate([310, 330])
+            .scale(57000)
+            .translate([295, 250])
             .center([103.851959, 1.290270]);
         this.geoGenerator = d3.geoPath().projection(this.projection);
 
-        // Initialize the visualization
         this.initVis();
     }
 
     initVis() {
-        // Load and render the GeoJSON, CSV, and lookup JSON data
+        // load and render the GeoJSON, CSV, and lookup JSON data
         Promise.all([
             d3.json(this.geojsonPath),
             d3.csv(this.csvPath),
@@ -32,7 +30,7 @@ export class MapVisualization {
     }
 
     wrangleData() {
-        // Calculate average transacted prices by district
+        // calculate average transacted prices by district
         this.districtAverages = this.calculateAveragePricesByDistrict(this.csvData);
         this.updateVis();
     }
@@ -50,7 +48,7 @@ export class MapVisualization {
             districtPrices[district].count += 1;
         });
 
-        // Calculate averages
+        // calculate the average price
         const districtAverages = {};
         for (const district in districtPrices) {
             districtAverages[district] = (districtPrices[district].total / districtPrices[district].count).toFixed(2);
@@ -90,11 +88,17 @@ export class MapVisualization {
             .attr('x', bounds[0][0])
             .attr('y', bounds[0][1])
             .attr('width', bounds[1][0] - bounds[0][0])
-            .attr('height', bounds[1][1] - bounds[0][1]);
+            .attr('height', bounds[1][1] - bounds[0][1])
+            .style('stroke', 'red')
+            .style('stroke-width', '2px')
+            .style('stroke-dasharray', '5,5')
+            .style('fill', 'none');
 
         d3.select(`${this.svgContainerId} .centroid`)
             .attr('transform', `translate(${centroid})`)
-            .style('display', 'inline');
+            .style('display', 'inline')
+            .style('fill', 'red')
+            .style('r', '5');
     }
 
     handleMouseout() {
@@ -104,43 +108,59 @@ export class MapVisualization {
     }
 
     adjustTooltipPosition(event, tooltip) {
-        const cardRect = document.querySelector(this.svgContainerId).getBoundingClientRect();
-        const tooltipRect = tooltip.node().getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-        let left = event.clientX;
-        let top = event.clientY;
+        const scrollX = window.scrollX || window.pageXOffset;
+        const scrollY = window.scrollY || window.pageYOffset;
 
-        // Adjust position to keep the tooltip inside the card horizontally
-        if (tooltipRect.right > cardRect.right) {
-            left = event.clientX - (tooltipRect.width + 10);
-        }
-        if (tooltipRect.left < cardRect.left) {
-            left = cardRect.left;
+        const tooltipWidth = 300;
+        const tooltipHeight = 150;
+        const padding = 10;
+        const verticalOffset = 30;
+
+        const mouseX = event.clientX;
+        const mouseY = event.clientY;
+
+        let left = mouseX + padding;
+        let top = mouseY - tooltipHeight - verticalOffset;
+
+        if (left + tooltipWidth > viewportWidth - padding) {
+            left = mouseX - tooltipWidth - padding;
         }
 
-        // Adjust position to keep the tooltip inside the card vertically
-        if (tooltipRect.bottom > cardRect.bottom) {
-            top = event.clientY - (tooltipRect.height + 10);
-        }
-        if (tooltipRect.top < cardRect.top) {
-            top = cardRect.top;
+        if (left < padding) {
+            left = padding;
         }
 
-        // Apply calculated position
-        tooltip.style('left', `${left}px`)
+        if (top < padding) {
+            top = mouseY + verticalOffset;
+        }
+
+        if (top + tooltipHeight > viewportHeight - padding) {
+            top = Math.max(padding, mouseY - tooltipHeight - verticalOffset);
+        }
+
+        left += scrollX;
+        top += scrollY;
+
+        tooltip
+            .style('position', 'absolute')
+            .style('left', `${left}px`)
             .style('top', `${top}px`)
-            .style('max-width', `${cardRect.width}px`)
-            .style('max-height', `${cardRect.height}px`)
-            .style('overflow', 'auto');
+            .style('width', `${tooltipWidth}px`)
+            .style('max-height', `${tooltipHeight}px`)
+            .style('overflow', 'auto')
+            .style('pointer-events', 'none')
     }
 
     updateVis() {
-        // Create a scale for the heatmap
+        // create a scale for the heatmap
         const avgPrices = Object.values(this.districtAverages).map(Number);
-        const colorScale = d3.scaleSequential(d3.interpolateOranges)
+        const colorScale = d3.scaleSequential(d3.interpolateViridis)
             .domain([d3.min(avgPrices), d3.max(avgPrices)]);
 
-        // Bind CSV data to GeoJSON features and map postal district
+        // bind the CSV data to GeoJSON features and map postal district
         this.geojson.features.forEach(feature => {
             const planningArea = feature.properties.planning_area;
             feature.properties.postalDistrict = this.mapPlanningAreaToPostalDistrict(planningArea);
@@ -149,7 +169,7 @@ export class MapVisualization {
             feature.properties.avgTransactedPrice = postalDistrict ? this.districtAverages[postalDistrict] : null;
         });
 
-        // Render the map paths
+        // render the map paths
         d3.select(`${this.svgContainerId} g.map`)
             .selectAll('path')
             .data(this.geojson.features)
