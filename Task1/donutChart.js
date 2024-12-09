@@ -1,7 +1,8 @@
 export default class DonutChart {
-    constructor(svgContainerId, data) {
+    constructor(svgContainerId, data, columnToAggregate) {
         this.svgContainerId = svgContainerId;
         this.data = data;
+        this.columnToAggregate = columnToAggregate; // The column name you want to aggregate
 
         this.width = 200;  // Fixed small width
         this.height = 200; // Fixed small height
@@ -10,6 +11,7 @@ export default class DonutChart {
         // Calculate the radius
         this.radius = Math.min(this.width, this.height) / 2 - this.margin;
 
+        // Create the SVG container
         this.initVis();
     }
 
@@ -27,8 +29,7 @@ export default class DonutChart {
             .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 15})`);
 
         // Set the color scale
-        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10)
-            .domain(this.data.map(d => d.key));
+        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
 
         // Compute the position of each group on the pie
         this.pieGenerator = d3.pie()
@@ -43,14 +44,21 @@ export default class DonutChart {
     }
 
     wrangleData() {
+        // Group the data based on the specified column and count the occurrences
+        const groupedData = d3.rollups(
+            this.data,
+            v => v.length,
+            d => d[this.columnToAggregate] // Use the column name for aggregation
+        ).map(([key, value]) => ({ key, value }));
+
         // Prepare the data for the pie layout
-        this.dataReady = this.pieGenerator(this.data);
+        this.dataReady = this.pieGenerator(groupedData);
 
         this.updateVis();
     }
 
     updateVis() {
-        // Build the pie chart
+        // Build the donut chart
         this.svg
             .selectAll('g.slice')
             .data(this.dataReady)

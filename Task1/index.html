@@ -154,6 +154,40 @@
             border-radius: 8px;
             /* Ensure the SVG also has rounded corners */
         }
+
+        .full-dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        .full-dark-card {
+            background-color: #1f1f1f;
+            border: 1px solid #333;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .full-dark-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Additional styles for consistent bento grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto auto;
+            gap: 1.5rem;
+        }
+
+        .bento-map {
+            grid-row: span 2;
+        }
+
+        .bento-donut-charts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
     </style>
 </head>
 
@@ -167,7 +201,7 @@
     </nav>
 
     <div class="container mx-auto mt-6 px-4">
-        <!-- Filter Section -->
+        <!-- Filter Section (remains unchanged) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <!-- Property Name Filter -->
             <div>
@@ -177,7 +211,6 @@
                     <option value="property1">Property 1</option>
                     <option value="property2">Property 2</option>
                     <option value="property3">Property 3</option>
-                    <!-- Add more properties as needed -->
                 </select>
             </div>
 
@@ -188,11 +221,10 @@
                     <option value="all">All Districts</option>
                     <option value="district7">District 7 - Middle Road, Golden Mile</option>
                     <option value="district9">District 9 - Orchard, River Valley</option>
-                    <!-- Add more districts as needed -->
                 </select>
             </div>
 
-            <!-- Tenure Filter (Range Slider) -->
+            <!-- Tenure Filter -->
             <div>
                 <label for="tenureRange" class="text-sm font-medium">Tenure (Years)</label>
                 <input type="range" id="tenureRange" class="full-dark-select mt-1 block w-full" min="0" max="999"
@@ -201,14 +233,12 @@
             </div>
         </div>
 
-        <!-- Map and Charts Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Map Section -->
-            <div class="full-dark-card card rounded-lg shadow-md p-6">
+        <!-- Bento Grid Section -->
+        <div class="bento-grid">
+            <!-- Map Section (takes 2 rows) -->
+            <div class="bento-map full-dark-card card rounded-lg shadow-md p-6">
                 <h5 class="text-lg font-semibold mb-4">Unit Price Distribution by Postal District and Property Type</h5>
-
-                <!-- Map Container -->
-                <div id="content" style="width: 100%; height: 400px; position: relative;">
+                <div id="content" style="width: 100%; height: 420px; position: relative;">
                     <svg width="100%" height="100%">
                         <g class="map"></g>
                         <g class="bounding-box">
@@ -220,35 +250,30 @@
                     </svg>
                     <div class="info" style="position: absolute; display: none;"></div>
                 </div>
-
-                <!-- Timeline Brush Component -->
-                <div id="timeline-brush" style="width: 100%; height: 80px; margin-top: 20px;"></div>
+                <div id="timeline-brush" style="width: 100%; height: 100px; margin-top: 20px;"></div>
             </div>
 
-            <!-- Right Section -->
-            <div class="grid grid-cols-1 gap-6">
-                <!-- Donut Charts Row -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="full-dark-card card rounded-lg shadow-md p-6 h-64">
-                        <h5 class="text-lg font-semibold mb-4">Property Type Distribution</h5>
-                        <div id="donutChart1" class="w-full h-full"></div>
-                    </div>
-                    <div class="full-dark-card card rounded-lg shadow-md p-6 h-64">
-                        <h5 class="text-lg font-semibold mb-4">Type of Area Distribution</h5>
-                        <div id="donutChart2" class="w-full h-full"></div>
-                    </div>
+            <!-- Donut Charts Section -->
+            <div class="bento-donut-charts">
+                <div class="full-dark-card card rounded-lg shadow-md p-4 h-full">
+                    <h5 class="text-lg font-semibold mb-4">Property Type Distribution</h5>
+                    <div id="donutChart1" class="w-full h-34"></div> <!-- Adjusted height -->
                 </div>
+                <div class="full-dark-card card rounded-lg shadow-md p-4 h-full">
+                    <h5 class="text-lg font-semibold mb-4">Type of Area Distribution</h5>
+                    <div id="donutChart2" class="w-full h-34"></div> <!-- Adjusted height -->
+                </div>
+            </div>
 
-                <!-- Bar Chart Row -->
-                <div class="full-dark-card card rounded-lg shadow-md p-6 h-72">
-                    <h5 class="text-lg font-semibold mb-4">Floor Level vs Cost Analysis</h5>
-                    <div id="barChart" class="w-full h-full"></div>
-                </div>
+            <!-- Bar Chart Section -->
+            <div class="full-dark-card card rounded-lg shadow-md p-6 h-full">
+                <h5 class="text-lg font-semibold mb-4">Floor Level vs Cost Analysis</h5>
+                <div id="barChart" class="w-full h-60"></div> <!-- Larger height -->
             </div>
         </div>
     </div>
 
-    <!-- Chatbot Button and Component -->
+    <!-- Chatbot Button and Component (remains unchanged) -->
     <div class="chat-bubble" onclick="toggleChat()">
         💬
     </div>

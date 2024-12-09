@@ -157,7 +157,7 @@ export default class MapVisualization {
     updateVis() {
         // create a scale for the heatmap
         const avgPrices = Object.values(this.districtAverages).map(Number);
-        const colorScale = d3.scaleSequential(d3.interpolateViridis)
+        const colorScale = d3.scaleSequential(d3.interpolateBlues)
             .domain([d3.min(avgPrices), d3.max(avgPrices)]);
 
         // bind the CSV data to GeoJSON features and map postal district
