@@ -1,3 +1,5 @@
+import HistogramChart from './histogramChart.js';
+
 export default class MapVisualization {
     constructor(svgContainerId, geojsonPath, csvPath, lookupJsonPath) {
         this.svgContainerId = svgContainerId;
@@ -76,13 +78,34 @@ export default class MapVisualization {
         const bounds = this.geoGenerator.bounds(d);
         const centroid = this.geoGenerator.centroid(d);
 
+        // Display tooltip with information and histogram container
         const tooltip = d3.select(`${this.svgContainerId} .info`)
-            .text(`${planning_area} (${district}) - District: ${postalDistrict} - Avg Transacted Price: $${avgTransactedPrice} [area = ${pixelArea} measure = ${measure}]`)
-            .style('display', 'inline')
+            .html(`
+            <span class="badge badge-pill badge-info">Planning Area: ${planning_area}</span>
+            <span class="badge badge-pill badge-info">District: ${district}</span>
+            <span class="badge badge-pill badge-info">Postal District: ${postalDistrict}</span>
+            <span class="badge badge-pill badge-info">Avg Transacted Price: $${avgTransactedPrice}</span>
+            <svg id="histogram-chart" width="500" height="300"></svg>
+        `)
+            .style('display', 'inline-block')
+            .style('position', 'absolute')
             .style('left', `${event.clientX}px`)
             .style('top', `${event.clientY}px`);
 
         this.adjustTooltipPosition(event, tooltip);
+
+        // Filter data for histogram
+        const filteredData = this.csvData.filter(row =>
+            row['Postal District'] === postalDistrict || row['Planning Area'] === planning_area
+        );
+
+        // Render the histogram in the tooltip
+        const histogramChart = new HistogramChart(
+            '#histogram-chart',
+            filteredData,
+            'Area (SQM)',
+            'Transacted Price ($)'
+        );
 
         d3.select(`${this.svgContainerId} .bounding-box rect`)
             .attr('x', bounds[0][0])
@@ -114,8 +137,8 @@ export default class MapVisualization {
         const scrollX = window.scrollX || window.pageXOffset;
         const scrollY = window.scrollY || window.pageYOffset;
 
-        const tooltipWidth = 300;
-        const tooltipHeight = 150;
+        const tooltipWidth = 500;
+        const tooltipHeight = 600;
         const padding = 10;
         const verticalOffset = 30;
 
@@ -152,6 +175,13 @@ export default class MapVisualization {
             .style('max-height', `${tooltipHeight}px`)
             .style('overflow', 'auto')
             .style('pointer-events', 'none')
+            .style('background-color', '#1f1f1f')  // Dark card background from index.html
+            .style('color', '#e0e0e0')  // Light gray text for contrast
+            .style('border', '1px solid #333')  // Subtle border
+            .style('border-radius', '8px')  // Rounded corners
+            .style('padding', '15px')
+            .style('box-shadow', '0 4px 15px rgba(0, 0, 0, 0.5)')  // Matching shadow from chat bubble
+            .style('z-index', '1000');  // Ensure it's on top
     }
 
     updateVis() {
