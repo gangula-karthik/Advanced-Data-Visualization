@@ -1,4 +1,5 @@
 import HistogramChart from './histogramChart.js';
+import { Legend } from './colorLegend.js';
 
 export default class MapVisualization {
     constructor(svgContainerId, geojsonPath, csvPath, lookupJsonPath) {

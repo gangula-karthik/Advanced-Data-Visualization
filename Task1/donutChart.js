@@ -16,6 +16,9 @@ export default class DonutChart {
     }
 
     initVis() {
+        // Remove any existing SVG to prevent duplicates
+        d3.select(this.svgContainerId).selectAll("*").remove();
+
         // Append the SVG object to the container
         this.svg = d3.select(this.svgContainerId)
             .append("svg")
@@ -24,8 +27,10 @@ export default class DonutChart {
             .attr("viewBox", `0 0 ${this.width} ${this.height}`)
             .attr("preserveAspectRatio", "xMidYMid meet")
             .style("display", "block")
-            .style("margin", "auto")
-            .append("g")
+            .style("margin", "auto");
+
+        // Create a group for the pie chart, positioned in the center
+        this.chartGroup = this.svg.append("g")
             .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 15})`);
 
         // Set the color scale
@@ -33,40 +38,148 @@ export default class DonutChart {
 
         // Compute the position of each group on the pie
         this.pieGenerator = d3.pie()
-            .value(d => d.value);
+            .value(d => d.value)
+            .sort(null); // Prevent sorting to maintain original order
 
         // Define the arc generator
         this.arcGenerator = d3.arc()
             .innerRadius(this.radius * 0.5)
             .outerRadius(this.radius);
 
-        this.wrangleData();
+        // Create a tooltip
+        this.tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "donut-tooltip")
+            .style("position", "absolute")
+            .style("visibility", "hidden")
+            .style("background-color", "#1f1f1f")
+            .style("border", "1px solid #333")
+            .style("color", "#fff")
+            .style("padding", "12px")
+            .style("border-radius", "8px")
+            .style("box-shadow", "0 4px 6px rgba(0,0,0,0.1)")
+            .style("font-size", "13px")
+            .style("max-width", "250px")
+            .style("pointer-events", "none")
+            .style("z-index", "10")
+            .style("transform", "translate(-50%, -50%)")
+            .style("opacity", "0.95")
+            .style("transition", "opacity 0.2s ease-in-out");
+
+        this.wrangleData(); // Initially wrangle data when the chart is created
     }
 
     wrangleData() {
-        // Group the data based on the specified column and count the occurrences
+        // Get selected values from the dropdowns
+        const selectedProperty = $("#propertyName").val();
+        const selectedDistrict = $("#districtName").val();
+
+        // Filter the data based on the selected dropdown values
+        let filteredData = this.data;
+
+        if (selectedProperty && selectedProperty !== "all") {
+            filteredData = filteredData.filter(row => row["Project Name"] === selectedProperty);
+        }
+
+        if (selectedDistrict && selectedDistrict !== "all") {
+            filteredData = filteredData.filter(row => row["Postal District"] === selectedDistrict);
+        }
+
+        // Group the filtered data based on the specified column and count the occurrences
         const groupedData = d3.rollups(
-            this.data,
+            filteredData,
             v => v.length,
             d => d[this.columnToAggregate] // Use the column name for aggregation
         ).map(([key, value]) => ({ key, value }));
 
+        // Sort data to ensure consistent color assignment
+        groupedData.sort((a, b) => b.value - a.value);
+
         // Prepare the data for the pie layout
         this.dataReady = this.pieGenerator(groupedData);
 
+        // Update the visualizations after filtering the data
         this.updateVis();
     }
 
     updateVis() {
-        // Build the donut chart
-        this.svg
-            .selectAll('g.slice')
+        // Remove any existing content, including "No data found" text
+        this.svg.selectAll("*").remove();
+
+        // Recreate the chart group
+        this.chartGroup = this.svg.append("g")
+            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 15})`);
+
+        // Check if there is data
+        if (this.dataReady.length === 0) {
+            // Display "No data found" message
+            this.svg.append("text")
+                .attr("x", this.width / 2)
+                .attr("y", this.height / 2)
+                .attr("text-anchor", "middle")
+                .style("font-size", "14px")
+                .style("fill", "gray")
+                .text("No data found");
+            return;
+        }
+
+        // Create pie slices
+        const slices = this.chartGroup.selectAll('g.slice')
             .data(this.dataReady)
             .enter()
             .append('g')
-            .attr('class', 'slice')
-            .append('path')
-            .attr('d', this.arcGenerator)
-            .attr('fill', d => this.colorScale(d.data.key));
+            .attr('class', 'slice');
+
+        // Add paths with entrance animation
+        const paths = slices.append('path')
+            .attr('fill', d => this.colorScale(d.data.key))
+            .attr('d', d => {
+                // Start with a zero-sized slice
+                const zeroArc = { startAngle: 0, endAngle: 0 };
+                return this.arcGenerator(zeroArc);
+            })
+            .transition()
+            .duration(1000)
+            .attrTween('d', (d) => {
+                const interpolate = d3.interpolate(
+                    { startAngle: 0, endAngle: 0 },
+                    { startAngle: d.startAngle, endAngle: d.endAngle }
+                );
+                return t => this.arcGenerator(interpolate(t));
+            });
+
+        // Add tooltip interactions
+        slices.on("mouseover", (event, d) => {
+            // Calculate percentage
+            const total = d3.sum(this.dataReady, d => d.value);
+            const percentage = ((d.value / total) * 100).toFixed(1);
+
+            // Create tooltip with category color indicator
+            const categoryColor = this.colorScale(d.data.key);
+
+            this.tooltip
+                .style("visibility", "visible")
+                .style("opacity", "0.95")
+                .html(`
+                        <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                            <div style="width: 12px; height: 12px; background-color: ${categoryColor}; margin-right: 8px; border-radius: 2px;"></div>
+                            <strong style="color: #fff;">${d.data.key}</strong>
+                        </div>
+                        <div style="color: #aaa;">
+                            Count: ${d.value}<br>
+                            Percentage: ${percentage}%
+                        </div>
+                    `);
+        })
+            .on("mousemove", (event) => {
+                this.tooltip
+                    .style("top", (event.pageY) + "px")
+                    .style("left", (event.pageX) + "px");
+            })
+            .on("mouseout", () => {
+                this.tooltip
+                    .style("visibility", "hidden")
+                    .style("opacity", "0");
+            });
     }
 }
