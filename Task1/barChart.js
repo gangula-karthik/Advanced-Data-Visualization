@@ -9,121 +9,170 @@ export default class BarChart {
         this.containerWidth = this.container.getBoundingClientRect().width;
         this.containerHeight = this.container.getBoundingClientRect().height;
 
-        // Adjusted bottom margin for x-axis label spacing
-        this.margin = { top: 10, right: 20, bottom: 60, left: 75 };
+        this.margin = { top: -10, right: 20, bottom: 100, left: 75 };
         this.width = this.containerWidth - this.margin.left - this.margin.right;
         this.height = this.containerHeight - this.margin.top - this.margin.bottom;
+
+        this.filteredData = this.data; // Initialize filtered data
 
         this.initVis();
     }
 
     initVis() {
-        // Append the SVG object to the container
         this.svg = d3.select(this.divId)
             .append("svg")
-            .attr("viewBox", `0 0 ${this.containerWidth} ${this.containerHeight}`)
+            .attr("viewBox", `0 0 ${this.containerWidth} ${this.containerHeight - 40}`)
             .attr("preserveAspectRatio", "xMidYMid meet")
             .style("width", "100%")
             .style("height", "100%")
             .append("g")
             .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
-        // Group data by the xColumn and calculate the average of yColumn for each group
-        const groupedData = d3.group(this.data, d => d[this.xColumn]);
+        this.initScales();
+        this.initAxes();
 
-        // Calculate average of yColumn for each group
+        this.wrangleData();
+    }
+
+    wrangleData() {
+        const selectedProperty = $("#propertyName").val();
+        const selectedDistrict = $("#districtName").val();
+        const tenureRange = $("#tenureSlider").slider("values");
+        const [minTenure, maxTenure] = tenureRange;
+        const sliderMax = $("#tenureSlider").slider("option", "max");
+
+        const isFreeholdIncluded = maxTenure === sliderMax;
+
+        let filteredData = this.data;
+
+        if (selectedProperty && selectedProperty !== "all") {
+            filteredData = filteredData.filter(row => row["Project Name"] === selectedProperty);
+        }
+
+        if (selectedDistrict && selectedDistrict !== "all") {
+            filteredData = filteredData.filter(row => row["Postal District"] === selectedDistrict);
+        }
+
+        if (!isNaN(minTenure) && !isNaN(maxTenure)) {
+            filteredData = filteredData.filter(row => {
+                const leaseEndYear = row["Lease End Year"];
+                if (isFreeholdIncluded) {
+                    return leaseEndYear === "Freehold";
+                }
+                return leaseEndYear !== "Freehold" &&
+                    leaseEndYear >= minTenure &&
+                    leaseEndYear <= maxTenure;
+            });
+        }
+
+        const groupedData = d3.group(filteredData, d => d[this.xColumn]);
+
         this.aggregatedData = Array.from(groupedData, ([key, values]) => ({
             [this.xColumn]: key,
             [this.yColumn]: d3.mean(values, d => d[this.yColumn])
         }));
 
-        console.log("agg data:", this.aggregatedData);
+        this.aggregatedData.sort((a, b) => b[this.yColumn] - a[this.yColumn]);
 
-        // Initialize scales and axes
-        this.initScales();
-        this.initAxes();
-
-        // Wrangle data (this could be used for data formatting/validation if needed)
-        this.wrangleData();
-    }
-
-    wrangleData() {
-        // Update the chart (renders bars)
         this.updateVis();
     }
 
     initScales() {
-        // X scale (category scale, band scale)
         this.xScale = d3.scaleBand()
             .range([0, this.width])
-            .domain(this.aggregatedData.map(d => d[this.xColumn]))
-            .padding(0.2);
+            .padding(0.3);  // Adjust padding for better spacing between bars
 
-        // Y scale (linear scale)
         this.yScale = d3.scaleLinear()
-            .domain([0, d3.max(this.aggregatedData, d => d[this.yColumn])])
             .range([this.height, 0]);
 
-        // Optional color scale for bar coloring
-        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10)
-            .domain(this.aggregatedData.map(d => d[this.xColumn]));
+        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
     }
 
     initAxes() {
-        // X axis
         this.svg.append("g")
-            .attr("transform", `translate(0,${this.height})`)
-            .call(d3.axisBottom(this.xScale))
-            .selectAll("text")
-            .attr("transform", "translate(-10,0)rotate(-45)")
-            .style("text-anchor", "end")
-            .style("font-size", "10px")
-            .style("fill", "white"); // Changed X axis label color to white
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${this.height})`);
 
-        // Y axis
         this.svg.append("g")
-            .call(d3.axisLeft(this.yScale).tickFormat(d => `$${d}`)) // Add dollar sign to each tick
-            .selectAll("text")
-            .style("fill", "white"); // Changed Y axis label color to white
+            .attr("class", "y-axis");
 
-        // X axis label
+        // X-Axis Label
         this.svg.append("text")
-            .attr("transform", `translate(${this.width / 2}, ${this.height + (this.margin.bottom / 2) + 25})`)
+            .attr("class", "x-label")
+            .attr("transform", `translate(${this.width / 2}, ${this.height + 80})`)
             .style("text-anchor", "middle")
-            .style("font-size", "14px")
-            .style("fill", "white") // Changed X axis label color to white
+            .style("fill", "white")
             .text(this.xColumn);
 
-        // Y axis label
+        // Y-Axis Label
         this.svg.append("text")
+            .attr("class", "y-label")
             .attr("transform", "rotate(-90)")
             .attr("x", -this.height / 2)
             .attr("y", -this.margin.left + 20)
             .style("text-anchor", "middle")
-            .style("font-size", "14px")
-            .style("fill", "white") // Changed Y axis label color to white
+            .style("fill", "white")
             .text(this.yColumn);
     }
 
     updateVis() {
-        // Bars: Use the x and y columns dynamically
+        if (this.aggregatedData.length === 0) {
+            this.removeData();  // Remove existing data and elements
+            this.showNoDataMessage();  // Display the no data message
+            return;
+        } else {
+            this.removeNoDataMessage();  // Remove the no data message if it exists
+            this.removeData();  // Ensure data is removed before adding new
+        }
+
+        this.xScale.domain(this.aggregatedData.map(d => d[this.xColumn]));
+        this.yScale.domain([0, d3.max(this.aggregatedData, d => d[this.yColumn])]);
+        this.colorScale.domain(this.aggregatedData.map(d => d[this.xColumn]));
+
+        this.svg.select(".x-axis")
+            .transition()
+            .duration(1000)
+            .call(d3.axisBottom(this.xScale))
+            .selectAll("text")
+            .attr("transform", "translate(-10,0)rotate(-45)")  // Rotate labels for readability
+            .style("text-anchor", "end")
+            .style("font-size", "12px")
+            .style("fill", "white");
+
+        this.svg.select(".y-axis")
+            .transition()
+            .duration(1000)
+            .call(d3.axisLeft(this.yScale).tickFormat(d => `$${d}`))
+            .selectAll("text")
+            .style("fill", "white");
+
         const bars = this.svg.selectAll("rect")
-            .data(this.aggregatedData);
+            .data(this.aggregatedData, d => d[this.xColumn]);
 
-        // Remove old bars (if any)
-        bars.exit().remove();
+        bars.exit()
+            .transition()
+            .duration(500)
+            .attr("y", this.height)
+            .attr("height", 0)
+            .remove();
 
-        // Create new bars
         bars.enter()
             .append("rect")
+            .merge(bars)
             .attr("x", d => this.xScale(d[this.xColumn]))
-            .attr("y", d => this.yScale(d[this.yColumn]))
+            .attr("y", this.height)  // Start from bottom to animate
             .attr("width", this.xScale.bandwidth())
-            .attr("height", d => this.height - this.yScale(d[this.yColumn]))
-            .attr("fill", d => this.colorScale(d[this.xColumn]));
+            .attr("height", 0)  // Start with height 0 for animation
+            .attr("fill", d => this.colorScale(d[this.xColumn]))
+            .transition()
+            .duration(1000)
+            .attr("y", d => this.yScale(d[this.yColumn]))
+            .attr("height", d => this.height - this.yScale(d[this.yColumn]));  // Animate height
 
-        // Add average line
         const average = d3.mean(this.aggregatedData, d => d[this.yColumn]);
+
+        this.svg.selectAll(".average-line").remove();
+
         this.svg.append("line")
             .attr("x1", 0)
             .attr("x2", this.width)
@@ -134,13 +183,40 @@ export default class BarChart {
             .attr("stroke-dasharray", "5,5")
             .attr("class", "average-line");
 
-        // Add average label
+        this.svg.selectAll(".average-label").remove();
+
         this.svg.append("text")
             .attr("x", this.width - 10)
             .attr("y", this.yScale(average) - 10)
             .attr("text-anchor", "end")
             .attr("font-size", "12px")
             .attr("fill", "red")
+            .attr("class", "average-label")
             .text("Average");
+    }
+
+    removeData() {
+        // Remove all bars, average line, and labels
+        this.svg.selectAll("rect").remove();  // Remove bars
+        this.svg.selectAll(".average-line").remove();  // Remove average line
+        this.svg.selectAll(".average-label").remove();  // Remove average label
+    }
+
+    showNoDataMessage() {
+        this.svg.append("text")
+            .attr("x", this.width / 2)
+            .attr("y", this.height / 2)
+            .attr("text-anchor", "middle")
+            .style("font-size", "14px")
+            .style("fill", "gray")
+            .text("No data found");
+    }
+
+    removeNoDataMessage() {
+        this.svg.selectAll("text")  // Remove all text, which includes the "No data found" message
+            .filter(function () {
+                return d3.select(this).text() === "No data found";  // Check the text content
+            })
+            .remove();
     }
 }

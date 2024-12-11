@@ -74,7 +74,13 @@ export default class DonutChart {
         const selectedProperty = $("#propertyName").val();
         const selectedDistrict = $("#districtName").val();
 
-        // Filter the data based on the selected dropdown values
+        // Get the value from the range slider
+        const tenureRange = $("#tenureSlider").slider("values"); // Assumes jQuery UI Slider is used
+        const [minTenure, maxTenure] = tenureRange;
+        const sliderMax = $("#tenureSlider").slider("option", "max");
+        console.log("Selected Tenure Range:", [minTenure, maxTenure]);
+
+        // Filter the data based on the selected dropdown values and tenure range
         let filteredData = this.data;
 
         if (selectedProperty && selectedProperty !== "all") {
@@ -83,6 +89,17 @@ export default class DonutChart {
 
         if (selectedDistrict && selectedDistrict !== "all") {
             filteredData = filteredData.filter(row => row["Postal District"] === selectedDistrict);
+        }
+
+        if (!isNaN(minTenure) && !isNaN(maxTenure)) {
+            filteredData = filteredData.filter(row => {
+                const leaseEndYear = row["Lease End Year"];
+                if (leaseEndYear === "Freehold") {
+                    // Include Freehold properties explicitly if the slider's max value is selected
+                    return maxTenure === sliderMax;
+                }
+                return leaseEndYear >= minTenure && leaseEndYear <= maxTenure;
+            });
         }
 
         // Group the filtered data based on the specified column and count the occurrences
@@ -101,6 +118,7 @@ export default class DonutChart {
         // Update the visualizations after filtering the data
         this.updateVis();
     }
+
 
     updateVis() {
         // Remove any existing content, including "No data found" text
@@ -148,7 +166,7 @@ export default class DonutChart {
                 return t => this.arcGenerator(interpolate(t));
             });
 
-        // Add tooltip interactions
+        // Modify the tooltip event handlers in the existing DonutChart class
         slices.on("mouseover", (event, d) => {
             // Calculate percentage
             const total = d3.sum(this.dataReady, d => d.value);
@@ -161,20 +179,20 @@ export default class DonutChart {
                 .style("visibility", "visible")
                 .style("opacity", "0.95")
                 .html(`
-                        <div style="display: flex; align-items: center; margin-bottom: 6px;">
-                            <div style="width: 12px; height: 12px; background-color: ${categoryColor}; margin-right: 8px; border-radius: 2px;"></div>
-                            <strong style="color: #fff;">${d.data.key}</strong>
-                        </div>
-                        <div style="color: #aaa;">
-                            Count: ${d.value}<br>
-                            Percentage: ${percentage}%
-                        </div>
-                    `);
+            <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                <div style="width: 12px; height: 12px; background-color: ${categoryColor}; margin-right: 8px; border-radius: 2px;"></div>
+                <strong style="color: #fff;">${d.data.key}</strong>
+            </div>
+            <div style="color: #aaa;">
+                Count: ${d.value}<br>
+                Percentage: ${percentage}%
+            </div>
+        `);
         })
             .on("mousemove", (event) => {
                 this.tooltip
-                    .style("top", (event.pageY) + "px")
-                    .style("left", (event.pageX) + "px");
+                    .style("top", (event.pageY - 30) + "px")
+                    .style("left", (event.pageX - 30) + "px");
             })
             .on("mouseout", () => {
                 this.tooltip

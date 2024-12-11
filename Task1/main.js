@@ -32,6 +32,8 @@ function populateDropdown(data, columnName, dropdownId, formatText = (value) => 
 $("#propertyName").on("change", updateCharts);
 $("#districtName").on("change", updateCharts);
 
+
+
 d3.csv(csvPath).then((data) => {
     console.log(data);
 
@@ -52,8 +54,10 @@ d3.csv(csvPath).then((data) => {
             const startYear = parseInt(match[2], 10);
             const endYear = startYear + leaseYears;
 
+            row["Lease Start Year"] = startYear;
             row["Lease End Year"] = endYear;
         } else {
+            row["Lease Start Year"] = "Freehold";
             row["Lease End Year"] = "Freehold";
         }
     });
@@ -66,18 +70,33 @@ d3.csv(csvPath).then((data) => {
 
     // Get min and max years for the tenure slider
     const minYear = Math.min(...data.map(row => row["Lease End Year"]).filter(val => val !== "Freehold"));
-    console.log("min year", minYear)
     const maxYear = Math.max(...data.map(row => row["Lease End Year"]).filter(val => val !== "Freehold"));
-    console.log("max year", maxYear);
 
     // Initialize the tenure slider
     $("#tenureSlider").slider({
         range: true,
         min: minYear,
-        max: maxYear,
-        values: [minYear, maxYear],
+        max: maxYear + 1, // Add an extra step for "Freehold"
+        values: [minYear, maxYear + 1], // Default to maxYear + 1 (Freehold)
         slide: function (event, ui) {
-            $("#tenureRangeLabel").text(`Year ${ui.values[0]} - ${ui.values[1]}`);
+            // Special handling for Freehold
+            const startLabel = ui.values[0] > maxYear ? "Freehold" : `Year ${ui.values[0]}`;
+            const endLabel = ui.values[1] > maxYear ? "Freehold" : `Year ${ui.values[1]}`;
+
+            // Update the range label dynamically
+            $("#tenureRangeLabel").text(`${startLabel} - ${endLabel}`);
+
+            // Prevent sliding past "Freehold" point
+            if (ui.values[0] > maxYear) {
+                $(this).slider('values', 0, maxYear + 1);
+            }
+            if (ui.values[1] > maxYear) {
+                $(this).slider('values', 1, maxYear + 1);
+            }
+        },
+        change: function (event, ui) {
+            // Trigger updateCharts on slider change
+            updateCharts();
         }
     });
 
@@ -99,7 +118,7 @@ d3.csv(csvPath).then((data) => {
     window.timelineBrush = timelineBrush;
 });
 
-// Function to update the charts on dropdown change
+// Function to update the charts on dropdown or slider change
 function updateCharts() {
     if (window.donutChart1) window.donutChart1.wrangleData();
     if (window.donutChart2) window.donutChart2.wrangleData();

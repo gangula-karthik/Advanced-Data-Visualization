@@ -254,13 +254,15 @@
             </div>
 
             <!-- Tenure Filter -->
-            <div class="tenure-slider-container">
-                <label for="tenureSlider" class="text-sm font-medium block mb-2">Tenure (Years)</label>
-                <div id="tenureSlider" class="slider"></div>
-                <div class="flex justify-between items-center mt-2 text-xs text-gray-400">
-                    <span id="minTenureLabel"></span>
-                    <span id="tenureRangeLabel"></span>
-                    <span id="maxTenureLabel">Freehold</span>
+            <div class="tenure-slider-container bg-[#1f1f1f] border border-[#333] rounded-lg p-4 shadow-md">
+                <label for="tenureSlider" class="text-sm font-medium block mb-3 text-gray-200">Tenure (Years)</label>
+                <div id="tenureSlider" class="slider h-1 bg-gray-700 rounded-full cursor-pointer relative">
+                    <div class="slider-track absolute h-full bg-blue-600 rounded-full"></div>
+                </div>
+                <div class="flex justify-between items-center mt-3 text-xs text-gray-400">
+                    <span id="minTenureLabel" class="text-gray-300"></span>
+                    <span id="tenureRangeLabel" class="text-gray-300 text-sm"></span>
+                    <span id="maxTenureLabel" class="text-gray-300">Freehold</span>
                 </div>
             </div>
         </div>
