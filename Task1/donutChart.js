@@ -69,6 +69,7 @@ export default class DonutChart {
         this.wrangleData(); // Initially wrangle data when the chart is created
     }
 
+
     wrangleData() {
         // Get selected values from the dropdowns
         const selectedProperty = $("#propertyName").val();
@@ -140,6 +141,7 @@ export default class DonutChart {
                 .text("No data found");
             return;
         }
+
 
         // Create pie slices
         const slices = this.chartGroup.selectAll('g.slice')

@@ -62,6 +62,41 @@ d3.csv(csvPath).then((data) => {
         }
     });
 
+    function updateKpiCards(data) {
+        // Calculate total properties
+        const totalProperties = new Set(data.map(row => row["Project Name"])).size;
+
+        // Calculate total revenue
+        const totalRevenue = d3.sum(data, row => row["Transacted Price ($)"]);
+
+        // Calculate price change
+        const initialAvgPrice = d3.mean(
+            data.filter(d => d["Sale Date"].getFullYear() === 2022),
+            d => d["Unit Price ($ PSF)"]
+        );
+        const latestAvgPrice = d3.mean(
+            data.filter(d => d["Sale Date"].getFullYear() === 2023),
+            d => d["Unit Price ($ PSF)"]
+        );
+        const priceChange = ((latestAvgPrice - initialAvgPrice) / initialAvgPrice) * 100;
+
+        // Find the hottest district
+        const districtRevenue = d3.rollup(
+            data,
+            v => d3.sum(v, d => d["Transacted Price ($)"]),
+            d => d["Postal District"]
+        );
+        const hottestDistrict = Array.from(districtRevenue).reduce((a, b) => b[1] > a[1] ? b : a);
+
+        // Update KPI cards with jQuery
+        $("#total-properties").text(totalProperties);
+        $("#total-revenue").text(`$${(totalRevenue / 1e6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} M`);
+        $("#price-change").text(`${priceChange.toFixed(2)}%`);
+        $("#hottest-district").text(`District ${hottestDistrict[0]}`);
+    }
+
+    updateKpiCards(data)
+
     calls = data;
 
     // Populate dropdowns
@@ -120,6 +155,11 @@ d3.csv(csvPath).then((data) => {
 
 // Function to update the charts on dropdown or slider change
 function updateCharts() {
+    if (window.chartData) {
+        updateKpiCards(window.chartData);
+    }
+
+    // Wrangle data for other charts
     if (window.donutChart1) window.donutChart1.wrangleData();
     if (window.donutChart2) window.donutChart2.wrangleData();
     if (window.barChart) window.barChart.wrangleData();

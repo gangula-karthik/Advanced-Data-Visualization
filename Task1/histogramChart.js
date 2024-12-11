@@ -11,7 +11,7 @@ export default class HistogramChart {
         this.containerHeight = 350; // Reduced height for tooltip
 
         // Adjust margins for axis labels and chart spacing
-        this.margin = { top: 40, right: 40, bottom: 100, left: 100 };
+        this.margin = { top: 40, right: 40, bottom: 100, left: 70 };
         this.width = this.containerWidth - this.margin.left - this.margin.right;
         this.height = this.containerHeight - this.margin.top - this.margin.bottom;
 
@@ -45,7 +45,7 @@ export default class HistogramChart {
         this.svg.append("text")
             .attr("class", "x-axis-label")
             .attr("x", this.width / 2)
-            .attr("y", this.height + this.margin.bottom - 60) // Adjusted to move it closer
+            .attr("y", this.height + this.margin.bottom - 60)
             .style("text-anchor", "middle")
             .style("fill", "#e0e0e0")
             .text("Area per SQM");
@@ -57,29 +57,33 @@ export default class HistogramChart {
             .attr("y", -this.margin.left + 15)
             .style("text-anchor", "middle")
             .style("fill", "#e0e0e0")
-            .text(`Average of ${this.yColumn}`);
+            .text(`Average Transacted Price`);
 
         this.wrangleData();
     }
 
     wrangleData() {
+        // Convert data to millions (assuming the y-values are in billions)
         const binGenerator = d3.bin()
             .value(d => parseFloat(d[this.xColumn].replace(/[,$]/g, '')))
-            .thresholds(10);
+            .thresholds(10); // Number of bins can be adjusted
 
         const bins = binGenerator(this.data);
 
         this.binnedData = bins.map(bin => ({
             x0: bin.x0,
             x1: bin.x1,
-            avg: d3.mean(bin, d => parseFloat(d[this.yColumn].replace(/[,$]/g, ''))) || 0
+            avg: d3.mean(bin, d => parseFloat(d[this.yColumn].replace(/[,$]/g, ''))) / 1000000 || 0 // Convert to millions
         }));
+
+        // Calculate the overall average transacted price in millions
+        this.overallAverage = d3.mean(this.data, d => parseFloat(d[this.yColumn].replace(/[,$]/g, ''))) / 1000000 || 0;
 
         this.updateVis();
     }
 
     updateVis() {
-        // Update the domains of the scales
+        // Update the domains of the scales (for millions)
         this.xScale.domain([d3.min(this.binnedData, d => d.x0), d3.max(this.binnedData, d => d.x1)]);
         this.yScale.domain([0, d3.max(this.binnedData, d => d.avg)]);
 
@@ -93,7 +97,7 @@ export default class HistogramChart {
             );
         this.yAxis.transition()
             .duration(750)
-            .call(d3.axisLeft(this.yScale));
+            .call(d3.axisLeft(this.yScale).tickFormat(d => d3.format(".2s")(d) + "M")); // Format the y-axis to display in millions
 
         // Bind data to bars
         const bars = this.svg.selectAll(".bar")
@@ -103,19 +107,19 @@ export default class HistogramChart {
         bars.exit()
             .transition()
             .duration(550)
-            .attr("y", this.height) // Move out of view
-            .attr("height", 0)     // Shrink height
+            .attr("y", this.height)
+            .attr("height", 0)
             .remove();
 
         bars.enter()
             .append("rect")
             .attr("class", "bar")
             .attr("x", d => this.xScale(d.x0))
-            .attr("y", this.height) // Start at the bottom
+            .attr("y", this.height)
             .attr("width", d => Math.max(0, this.xScale(d.x1) - this.xScale(d.x0) - 1))
-            .attr("height", 0)      // Start with height 0
+            .attr("height", 0)
             .attr("fill", "#0072be")
-            .merge(bars) // Merge with update selection
+            .merge(bars)
             .transition()
             .duration(550)
             .attr("x", d => this.xScale(d.x0))
@@ -123,5 +127,28 @@ export default class HistogramChart {
             .attr("width", d => Math.max(0, this.xScale(d.x1) - this.xScale(d.x0) - 1))
             .attr("height", d => this.height - this.yScale(d.avg))
             .attr("fill", "#0072be");
+
+        // Add the average line for transacted price in millions
+        this.svg.selectAll(".average-line").remove();
+        this.svg.append("line")
+            .attr("class", "average-line")
+            .attr("x1", 0)
+            .attr("x2", this.width)
+            .attr("y1", this.yScale(this.overallAverage))
+            .attr("y2", this.yScale(this.overallAverage))
+            .attr("stroke", "red")
+            .attr("stroke-width", 2)
+            .attr("stroke-dasharray", "5,5");
+
+        // Add the label for the average line
+        this.svg.selectAll(".average-label").remove();
+        this.svg.append("text")
+            .attr("class", "average-label")
+            .attr("x", this.width - 10)
+            .attr("y", this.yScale(this.overallAverage) - 5)
+            .attr("text-anchor", "end")
+            .style("fill", "red")
+            .style("font-size", "12px")
+            .text(`Average: ${this.overallAverage.toFixed(2)} M`); // Display in millions (M)
     }
 }
