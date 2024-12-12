@@ -4,9 +4,9 @@ export default class DonutChart {
         this.data = data;
         this.columnToAggregate = columnToAggregate; // The column name you want to aggregate
 
-        this.width = 200;  // Fixed small width
-        this.height = 200; // Fixed small height
-        this.margin = 20;  // Minimal margin to save space
+        this.width = 250;  // Fixed small width
+        this.height = 250; // Fixed small height
+        this.margin = 30;  // Minimal margin to save space
 
         // Calculate the radius
         this.radius = Math.min(this.width, this.height) / 2 - this.margin;
@@ -24,14 +24,18 @@ export default class DonutChart {
             .append("svg")
             .attr("width", `${this.width}px`)
             .attr("height", `${this.height}px`)
-            .attr("viewBox", `0 0 ${this.width} ${this.height}`)
+            .attr("viewBox", `0 0 ${this.width} ${this.height - 20}`)
             .attr("preserveAspectRatio", "xMidYMid meet")
             .style("display", "block")
             .style("margin", "auto");
 
         // Create a group for the pie chart, positioned in the center
         this.chartGroup = this.svg.append("g")
-            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 15})`);
+            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 30})`);
+
+        // Create a group for the legend
+        this.legendGroup = this.svg.append("g")
+            .attr("transform", `translate(0, ${this.height - 80})`);
 
         // Set the color scale
         this.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
@@ -39,7 +43,7 @@ export default class DonutChart {
         // Compute the position of each group on the pie
         this.pieGenerator = d3.pie()
             .value(d => d.value)
-            .sort(null); // Prevent sorting to maintain original order
+            .sort(null);
 
         // Define the arc generator
         this.arcGenerator = d3.arc()
@@ -66,7 +70,7 @@ export default class DonutChart {
             .style("opacity", "0.95")
             .style("transition", "opacity 0.2s ease-in-out");
 
-        this.wrangleData(); // Initially wrangle data when the chart is created
+        this.wrangleData();
     }
 
 
@@ -76,10 +80,9 @@ export default class DonutChart {
         const selectedDistrict = $("#districtName").val();
 
         // Get the value from the range slider
-        const tenureRange = $("#tenureSlider").slider("values"); // Assumes jQuery UI Slider is used
+        const tenureRange = $("#tenureSlider").slider("values");
         const [minTenure, maxTenure] = tenureRange;
         const sliderMax = $("#tenureSlider").slider("option", "max");
-        console.log("Selected Tenure Range:", [minTenure, maxTenure]);
 
         // Filter the data based on the selected dropdown values and tenure range
         let filteredData = this.data;
@@ -96,7 +99,6 @@ export default class DonutChart {
             filteredData = filteredData.filter(row => {
                 const leaseEndYear = row["Lease End Year"];
                 if (leaseEndYear === "Freehold") {
-                    // Include Freehold properties explicitly if the slider's max value is selected
                     return maxTenure === sliderMax;
                 }
                 return leaseEndYear >= minTenure && leaseEndYear <= maxTenure;
@@ -107,7 +109,7 @@ export default class DonutChart {
         const groupedData = d3.rollups(
             filteredData,
             v => v.length,
-            d => d[this.columnToAggregate] // Use the column name for aggregation
+            d => d[this.columnToAggregate]
         ).map(([key, value]) => ({ key, value }));
 
         // Sort data to ensure consistent color assignment
@@ -121,13 +123,60 @@ export default class DonutChart {
     }
 
 
+    createLegend(dataReady) {
+        // Ensure we have a valid legendGroup and data
+        if (!this.legendGroup || !dataReady || dataReady.length === 0) {
+            return;
+        }
+
+        // Remove existing legend
+        this.legendGroup.selectAll("*").remove();
+
+        // Create legend items
+        const legendItems = this.legendGroup.selectAll(".legend-item")
+            .data(dataReady) // Data is bound in the order it appears in dataReady
+            .enter()
+            .append("g")
+            .attr("class", "legend-item")
+            .attr("transform", (d, i) => {
+                // Center the legend items horizontally
+                const totalWidth = dataReady.length * 100; // Each item takes up 100px
+                const startX = (this.width - totalWidth) / 2; // Calculate starting X to center
+                return `translate(${startX + i * 80}, -40)`; // Spread items evenly
+            });
+
+        // Add colored rectangles
+        legendItems.append("rect")
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", d => this.colorScale(d.data.key))
+            .attr("rx", 2)
+            .attr("ry", 2);
+
+        // Add text labels vertically centered beside the rectangle
+        legendItems.append("text")
+            .attr("x", 20) // Position the text beside the rectangle
+            .attr("y", 9.5) // Vertically center the text relative to the rectangle
+            .text(d => `${d.data.key}`) // Use the key for the label
+            .style("font-size", "10px")
+            .style("fill", "white")
+            .style("alignment-baseline", "middle");
+    }
+
+
+
     updateVis() {
         // Remove any existing content, including "No data found" text
-        this.svg.selectAll("*").remove();
+        this.svg.selectAll("*:not(.legend-group)").remove();
 
         // Recreate the chart group
         this.chartGroup = this.svg.append("g")
-            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 15})`);
+            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 30})`);
+
+        // Recreate the legend group
+        this.legendGroup = this.svg.append("g")
+            .attr("class", "legend-group")
+            .attr("transform", `translate(${30}, ${this.height + 5})`);
 
         // Check if there is data
         if (this.dataReady.length === 0) {
@@ -141,7 +190,6 @@ export default class DonutChart {
                 .text("No data found");
             return;
         }
-
 
         // Create pie slices
         const slices = this.chartGroup.selectAll('g.slice')
@@ -168,7 +216,7 @@ export default class DonutChart {
                 return t => this.arcGenerator(interpolate(t));
             });
 
-        // Modify the tooltip event handlers in the existing DonutChart class
+        // Tooltip event handlers
         slices.on("mouseover", (event, d) => {
             // Calculate percentage
             const total = d3.sum(this.dataReady, d => d.value);
@@ -201,5 +249,8 @@ export default class DonutChart {
                     .style("visibility", "hidden")
                     .style("opacity", "0");
             });
+
+        // Create legend
+        this.createLegend(this.dataReady);
     }
 }
