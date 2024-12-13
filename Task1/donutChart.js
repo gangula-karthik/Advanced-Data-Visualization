@@ -30,7 +30,8 @@ export default class DonutChart {
         this.legendGroup = this.svg.append("g")
             .attr("transform", `translate(0, ${this.height - 80})`);
 
-        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+        // filtering out red as it is not a recommended color, often showing negative data or trends
+        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10.filter((color, index) => index !== 2));
 
         this.pieGenerator = d3.pie()
             .value(d => d.value)

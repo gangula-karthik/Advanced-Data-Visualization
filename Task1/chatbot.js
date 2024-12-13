@@ -18,7 +18,7 @@ const sendMessage = async () => {
         messages.scrollTop = messages.scrollHeight;
 
         try {
-            const response = await fetch('127.0.0.1:8000/chat', {
+            const response = await fetch('127.0.0.1:5000/query', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -37,12 +37,14 @@ function updateKpiCards(data) {
     const totalRevenue = d3.sum(data, row => row["Transacted Price ($)"]);
 
     // Calculate price change
+    const earliestSaleDate = d3.min(data, d => d["Sale Date"]);
+    const latestSaleDate = d3.max(data, d => d["Sale Date"]);
     const initialAvgPrice = d3.mean(
-        data.filter(d => d["Sale Date"].getFullYear() === 2022),
+        data.filter(d => d["Sale Date"].getFullYear() === earliestSaleDate.getFullYear()),
         d => d["Unit Price ($ PSM)"]
     );
     const latestAvgPrice = d3.mean(
-        data.filter(d => d["Sale Date"].getFullYear() === 2023),
+        data.filter(d => d["Sale Date"].getFullYear() === latestSaleDate.getFullYear()),
         d => d["Unit Price ($ PSM)"]
     );
     const priceChange = ((latestAvgPrice - initialAvgPrice) / initialAvgPrice) * 100;
@@ -50,7 +52,7 @@ function updateKpiCards(data) {
     // Find the hottest district
     const districtRevenue = d3.rollup(
         data,
-        v => d3.sum(v, d => d["Transacted Price ($)"]),
+        v => d3.mean(v, d => d["Transacted Price ($)"]),
         d => d["Postal District"]
     );
     const hottestDistrict = Array.from(districtRevenue).reduce((a, b) => b[1] > a[1] ? b : a);

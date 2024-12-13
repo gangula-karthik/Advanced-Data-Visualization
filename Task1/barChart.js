@@ -85,7 +85,8 @@ export default class BarChart {
         this.yScale = d3.scaleLinear()
             .range([this.height, 0]);
 
-        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
+        this.colorScale = d3.scaleOrdinal(d3.schemeTableau10.filter((color, index) => index !== 2));
+
     }
 
     initAxes() {

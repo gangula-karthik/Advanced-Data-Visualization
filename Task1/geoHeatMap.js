@@ -109,7 +109,7 @@ export default class MapVisualization {
             <span class="badge badge-pill badge-info">Postal District: ${district}</span>
             <span class="badge badge-pill badge-info">District Name: ${districtName}</span>
             <span class="badge badge-pill badge-info">Avg Transacted Price: $${avgTransactedPrice}</span>
-            <h4 class="mt-5 text-base text-gray-200 text-center font-semibold">Avg Transacted Price by Area (sqm)</h4>
+            <h4 class="mt-5 text-base text-gray-200 text-center font-semibold">Avg Unit Price by Area (sqm)</h4>
             <svg id="histogram-chart" width="500" height="300"></svg>
         `)
             .style('display', 'inline-block')
@@ -119,18 +119,18 @@ export default class MapVisualization {
 
         this.adjustTooltipPosition(event, tooltip);
 
-        // Filter data for histogram
-        const filteredData = this.csvData.filter(row =>
-            row['Postal District'] === district.toString()
-        );
+        if (districtName !== 'Unknown') {
+            const filteredData = this.csvData.filter(row =>
+                row['Postal District'] === district.toString()
+            );
 
-        // rendering the histogram in the tooltip
-        const histogramChart = new HistogramChart(
-            '#histogram-chart',
-            filteredData,
-            'Area (SQM)',
-            'Transacted Price ($)'
-        );
+            const histogramChart = new HistogramChart(
+                '#histogram-chart',
+                filteredData,
+                'Area (SQM)',
+                'Unit Price ($ PSM)'
+            );
+        }
 
         d3.select(`${this.svgContainerId} .bounding-box rect`)
             .attr('x', bounds[0][0])
@@ -165,13 +165,13 @@ export default class MapVisualization {
         const tooltipWidth = 500;
         const tooltipHeight = 600;
         const padding = 10;
-        const verticalOffset = 30;
+        const verticalOffset = 100; // Adjusted to make tooltip appear slightly above
 
         const mouseX = event.clientX;
         const mouseY = event.clientY;
 
         let left = mouseX + padding;
-        let top = mouseY - tooltipHeight - verticalOffset;
+        let top = mouseY - tooltipHeight; // Adjusted to make tooltip appear slightly above
 
         if (left + tooltipWidth > viewportWidth - padding) {
             left = mouseX - tooltipWidth - padding;
@@ -182,11 +182,11 @@ export default class MapVisualization {
         }
 
         if (top < padding) {
-            top = mouseY + verticalOffset;
+            top = mouseY + verticalOffset; // Adjusted to make tooltip appear slightly above
         }
 
         if (top + tooltipHeight > viewportHeight - padding) {
-            top = Math.max(padding, mouseY - tooltipHeight - verticalOffset);
+            top = Math.max(padding, mouseY - tooltipHeight - verticalOffset); // Adjusted to make tooltip appear slightly above
         }
 
         left += scrollX;
@@ -239,8 +239,6 @@ export default class MapVisualization {
             .selectAll('.district-label')
             .data(this.geojson.features.filter(d => d.properties.postal_district !== 'Unknown'))
             .join('text')
-            .transition()
-            .duration(750)
             .attr('class', 'district-label')
             .attr('x', d => this.geoGenerator.centroid(d)[0])
             .attr('y', d => this.geoGenerator.centroid(d)[1])

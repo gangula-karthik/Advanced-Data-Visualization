@@ -57,6 +57,8 @@ export default class HistogramChart {
             avg: d3.mean(bin, d => d[this.yColumn]) // Raw values
         }));
 
+        console.log(this.data)
+
         this.overallAverage = d3.mean(this.data, d => d[this.yColumn]);
         this.updateVis();
     }
@@ -121,7 +123,7 @@ export default class HistogramChart {
             .attr("y", -this.margin.left + 20)
             .style("text-anchor", "middle")
             .style("fill", "white")
-            .text("Average Transacted Price (SGD)");
+            .text("Unit Price (per SQM)");
 
         this.svg.append("text")
             .attr("class", "x-axis-label")
