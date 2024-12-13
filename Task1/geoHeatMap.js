@@ -270,9 +270,11 @@ export default class MapVisualization {
             }
         );
 
-        // Append the legend to your SVG container
+
+        // this is done to clear the legend everytime it updates so that multiples legends are not added on every update
         d3.select(`${this.svgContainerId} .legend`)
-            .append(() => legendNode); // Append the SVG node returned by the Legend function
+            .html('')
+            .append(() => legendNode);
     }
 
 }
