@@ -6,7 +6,6 @@ import TimelineBrush from './timeline.js';
 const geojsonPath = './data/merged_output.geojson';
 const csvPath = './data/CommercialTrans_201910 to 202410.csv';
 
-let calls;
 
 function populateDropdown(data, columnName, dropdownId, formatText = (value) => value, isNumeric = false) {
     let uniqueValues = Array.from(new Set(data.map(row => row[columnName])));
@@ -40,11 +39,11 @@ function updateKpiCards(data) {
     // Calculate price change
     const initialAvgPrice = d3.mean(
         data.filter(d => d["Sale Date"].getFullYear() === 2022),
-        d => d["Unit Price ($ PSF)"]
+        d => d["Unit Price ($ PSM)"]
     );
     const latestAvgPrice = d3.mean(
         data.filter(d => d["Sale Date"].getFullYear() === 2023),
-        d => d["Unit Price ($ PSF)"]
+        d => d["Unit Price ($ PSM)"]
     );
     const priceChange = ((latestAvgPrice - initialAvgPrice) / initialAvgPrice) * 100;
 
@@ -75,7 +74,9 @@ d3.csv(csvPath).then((data) => {
         row["Transacted Price ($)"] = +row["Transacted Price ($)"].replace(/,/g, "");
         row["Unit Price ($ PSF)"] = +row["Unit Price ($ PSF)"].replace(/,/g, "");
         row["Unit Price ($ PSM)"] = +row["Unit Price ($ PSM)"].replace(/,/g, "");
+        row["Floor Level"] = row["Floor Level"].replace("-", "NA")
         row["Sale Date"] = d3.timeParse("%b-%y")(row["Sale Date"]);
+
 
         const tenure = row["Tenure"]; // Get the "Tenure" column value
         const match = tenure.match(/(\d+)\s+yrs\s+lease\s+commencing\s+from\s+(\d{4})/); // Extract duration and start year
@@ -95,7 +96,7 @@ d3.csv(csvPath).then((data) => {
 
     updateKpiCards(data)
 
-    calls = data;
+    window.originalData = data
 
     // Populate dropdowns
     populateDropdown(data, "Project Name", "propertyName");
@@ -140,21 +141,20 @@ d3.csv(csvPath).then((data) => {
     const donutChart1 = new DonutChart("#donutChart1", data, "Property Type");
     const donutChart2 = new DonutChart('#donutChart2', data, "Type of Area");
     const barChart = new BarChart('#barChart', data, "Floor Level", "Unit Price ($ PSM)");
-    const timelineBrush = new TimelineBrush('#timeline-brush', data, (x0, x1) => {
-        console.log(`Brushed range: ${x0} to ${x1}`);
-
-        // Check if a range is selected
+    const timelineBrush = new TimelineBrush('#timeline-svg', data, (x0, x1) => {
         const filteredData = x0 && x1
             ? data.filter(d => {
-                const saleDate = new Date(d["Sale Date"]); // Ensure the date is parsed
-                return saleDate >= x0 && saleDate <= x1; // Check if the date falls in the range
+                const saleDate = d["Sale Date"]; // Already parsed during initial data processing
+                return saleDate >= x0 && saleDate <= x1;
             })
-            : data; // If no range, use all data
+            : data;
 
-        // Update global data and charts
         window.chartData = filteredData;
+
         updateCharts();
     });
+
+    $('#reset-filter-btn').on('click', resetBrush);
 
     const mapVis = new MapVisualization('#content', geojsonPath, data);
 
@@ -163,17 +163,64 @@ d3.csv(csvPath).then((data) => {
     window.donutChart2 = donutChart2;
     window.barChart = barChart;
     window.timelineBrush = timelineBrush;
+    window.mapVis = mapVis;
 });
 
-// Function to update the charts on dropdown or slider change
-function updateCharts() {
-    if (window.chartData) {
-        updateKpiCards(window.chartData);
-    }
+function resetBrush() {
+    // Reset brush for timelineBrush
+    d3.select('#timeline-svg .brush').call(timelineBrush.brush.move, null);
+    window.chartData = window.originalData;
+    updateKpiCards(window.chartData);
 
-    // Wrangle data for other charts
-    if (window.donutChart1) window.donutChart1.wrangleData();
-    if (window.donutChart2) window.donutChart2.wrangleData();
-    if (window.barChart) window.barChart.wrangleData();
-    if (window.timelineBrush) window.timelineBrush.wrangleData();
+    // Reset data to original state for all charts
+    timelineBrush.data = window.chartData;
+    timelineBrush.wrangleData(); // Reprocess data
+
+    // Reset data for donutChart1
+    donutChart1.data = window.chartData;
+    donutChart1.wrangleData();
+
+    // Reset data for donutChart2
+    donutChart2.data = window.chartData;
+    donutChart2.wrangleData();
+
+    // Reset data for barChart
+    barChart.data = window.chartData;
+    barChart.wrangleData();
+
+    // Reset data for mapVis
+    mapVis.csvData = window.chartData;
+    mapVis.wrangleData(); // Reprocess map data
+}
+
+
+
+function updateCharts() {
+    // Determine the data source - use brushed data if available, otherwise use original dataset
+    const dataToUse = window.chartData || calls;
+
+    // Update KPI cards with the filtered data
+    updateKpiCards(dataToUse);
+
+    // Update each chart with the filtered data
+    if (window.donutChart1) {
+        window.donutChart1.data = dataToUse;
+        window.donutChart1.wrangleData();
+    }
+    if (window.donutChart2) {
+        window.donutChart2.data = dataToUse;
+        window.donutChart2.wrangleData();
+    }
+    if (window.barChart) {
+        window.barChart.data = dataToUse;
+        window.barChart.wrangleData();
+    }
+    if (window.timelineBrush) {
+        window.timelineBrush.data = dataToUse;
+        window.timelineBrush.wrangleData();
+    }
+    if (window.mapVis) {
+        window.mapVis.csvData = dataToUse;
+        window.mapVis.wrangleData();
+    }
 }

@@ -28,21 +28,45 @@ export default class MapVisualization {
     }
 
     wrangleData() {
-        // Calculate average transacted prices by district
-        this.districtAverages = this.calculateAveragePricesByDistrict(this.csvData);
+        const selectedProperty = $("#propertyName").val();
+        const selectedDistrict = $("#districtName").val();
 
-        // Add avgTransactedPrice and District Name to GeoJSON features
+        const tenureRange = $("#tenureSlider").slider("values");
+        const [minTenure, maxTenure] = tenureRange;
+        const sliderMax = $("#tenureSlider").slider("option", "max");
+
+        let filteredData = this.csvData;
+
+        if (selectedProperty && selectedProperty !== "all") {
+            filteredData = filteredData.filter(row => row["Project Name"] === selectedProperty);
+        }
+
+        if (selectedDistrict && selectedDistrict !== "all") {
+            filteredData = filteredData.filter(row => row["Postal District"] === selectedDistrict);
+        }
+
+        if (!isNaN(minTenure) && !isNaN(maxTenure)) {
+            filteredData = filteredData.filter(row => {
+                const leaseEndYear = row["Lease End Year"];
+                if (leaseEndYear === "Freehold") {
+                    return maxTenure === sliderMax;
+                }
+                return leaseEndYear >= minTenure && leaseEndYear <= maxTenure;
+            });
+        }
+
+
+        this.districtAverages = this.calculateAveragePricesByDistrict(filteredData);
+
         this.geojson.features.forEach(feature => {
             const postalDistrict = feature.properties.postal_district.toString();
 
-            // Add average transacted price
             feature.properties.avgTransactedPrice = postalDistrict
-                ? parseFloat(this.districtAverages[postalDistrict])
+                ? parseFloat(this.districtAverages[postalDistrict] || 0)
                 : null;
 
-            // Find the first matching row to get the district name
-            const matchingRow = this.csvData.find(row => row['Postal District'] === postalDistrict);
-            feature.properties.districtName = matchingRow ? matchingRow['District Name'] : 'Unknown';
+            const matchingRow = filteredData.find(row => row["Postal District"] === postalDistrict);
+            feature.properties.districtName = matchingRow ? matchingRow["District Name"] : "Unknown";
         });
 
         this.updateVis();
@@ -63,7 +87,6 @@ export default class MapVisualization {
             districtPrices[district].count += 1;
         });
 
-        // Calculate the average price
         const districtAverages = {};
         for (const district in districtPrices) {
             districtAverages[district] = (
@@ -76,14 +99,11 @@ export default class MapVisualization {
 
     handleMouseover(event, d) {
         const district = d.properties.postal_district;
-        const subzone = d.properties.SUBZONE_N;
-        const planning_area = d.properties.PLN_AREA_N;
         const districtName = d.properties.districtName || 'Unknown';
         const avgTransactedPrice = d.properties.avgTransactedPrice || 'N/A';
         const bounds = this.geoGenerator.bounds(d);
         const centroid = this.geoGenerator.centroid(d);
 
-        // Display tooltip with information and histogram container
         const tooltip = d3.select(`${this.svgContainerId} .info`)
             .html(`
             <span class="badge badge-pill badge-info">Postal District: ${district}</span>
@@ -104,9 +124,7 @@ export default class MapVisualization {
             row['Postal District'] === district.toString()
         );
 
-        console.log("filter", filteredData)
-
-        // Render the histogram in the tooltip
+        // rendering the histogram in the tooltip
         const histogramChart = new HistogramChart(
             '#histogram-chart',
             filteredData,
@@ -192,14 +210,16 @@ export default class MapVisualization {
     }
 
     updateVis() {
-        // Create a scale for the heatmap
+        // creating the a scale for the heatmap
         const avgPrices = Object.values(this.districtAverages).map(Number);
         const colorScale = d3.scaleSequential(d3.interpolateBlues)
             .domain([d3.min(avgPrices), d3.max(avgPrices)]);
 
+        console.log("avg prices", avgPrices)
+
         const mapGroup = d3.select(`${this.svgContainerId} g.map`);
 
-        // Render the map paths
+        // using this to render the paths for the maps
         mapGroup
             .selectAll('path')
             .data(this.geojson.features)
@@ -213,11 +233,14 @@ export default class MapVisualization {
             .on('mouseout', () => this.handleMouseout())
             .style('cursor', 'pointer');
 
-        // Add text labels for postal districts, excluding 'unknown'
+
+        // adding all the text labels on the map for better readability by the user
         mapGroup
             .selectAll('.district-label')
             .data(this.geojson.features.filter(d => d.properties.postal_district !== 'Unknown'))
             .join('text')
+            .transition()
+            .duration(750)
             .attr('class', 'district-label')
             .attr('x', d => this.geoGenerator.centroid(d)[0])
             .attr('y', d => this.geoGenerator.centroid(d)[1])
@@ -230,5 +253,26 @@ export default class MapVisualization {
             .style('stroke', 'white')
             .style('stroke-width', '0.5px')
             .style('pointer-events', 'none');
+
+        const legendNode = Legend(d3.scaleSequential(d3.interpolateBlues) // Example color scale
+            .domain([d3.min(avgPrices), d3.max(avgPrices)]), // Adjust domain as per your data
+            {
+                title: "Average Transacted Price",
+                tickSize: 6,
+                width: 320,
+                height: 50, // Adjust height to your needs
+                marginTop: 18,
+                marginRight: 0,
+                marginBottom: 16,
+                marginLeft: 10,
+                ticks: 5, // Adjust ticks to your needs
+                tickFormat: d3.format('.2s')
+            }
+        );
+
+        // Append the legend to your SVG container
+        d3.select(`${this.svgContainerId} .legend`)
+            .append(() => legendNode); // Append the SVG node returned by the Legend function
     }
+
 }

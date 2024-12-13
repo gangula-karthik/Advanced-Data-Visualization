@@ -10,9 +10,14 @@ export default class TimelineBrush {
         this.containerHeight = container.getBoundingClientRect().height;
 
         // Set margins
-        this.margin = { top: 10, right: 30, bottom: 130, left: 30 }; // Adjust bottom margin for x-axis labels
+        this.margin = {
+            top: 10,
+            right: 10,
+            bottom: 25, // Adjust bottom margin for x-axis labels
+            left: 10
+        };
         this.width = this.containerWidth - this.margin.left - this.margin.right;
-        this.height = 200 - this.margin.top - this.margin.bottom; // Increase height for chart visibility
+        this.height = this.containerHeight - this.margin.top - this.margin.bottom;
 
         // Initialize SVG and scales
         this.initVis();
@@ -56,6 +61,7 @@ export default class TimelineBrush {
 
         this.addHandles();
     }
+
 
     wrangleData() {
         const parseDate = d3.timeParse("%b-%y");
