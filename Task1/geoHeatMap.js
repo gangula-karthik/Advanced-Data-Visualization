@@ -2,11 +2,10 @@ import HistogramChart from './histogramChart.js';
 import { Legend } from './colorLegend.js';
 
 export default class MapVisualization {
-    constructor(svgContainerId, geojsonPath, csvPath, lookupJsonPath) {
+    constructor(svgContainerId, geojsonPath, csvData) {
         this.svgContainerId = svgContainerId;
         this.geojsonPath = geojsonPath;
-        this.csvPath = csvPath;
-        this.lookupJsonPath = lookupJsonPath;
+        this.csvData = csvData;
         this.projection = d3.geoMercator()
             .scale(57000)
             .translate([295, 250])
@@ -17,15 +16,11 @@ export default class MapVisualization {
     }
 
     initVis() {
-        // load and render the GeoJSON, CSV, and lookup JSON data
+        // Load and render the GeoJSON, CSV, and lookup JSON data
         Promise.all([
-            d3.json(this.geojsonPath),
-            d3.csv(this.csvPath),
-            d3.json(this.lookupJsonPath)
-        ]).then(([geojson, csvData, lookupJson]) => {
+            d3.json(this.geojsonPath)
+        ]).then(([geojson]) => {
             this.geojson = geojson;
-            this.csvData = csvData;
-            this.lookupJson = lookupJson;
             this.wrangleData();
         }).catch(error => {
             console.error('Error loading the data files:', error);
@@ -33,8 +28,23 @@ export default class MapVisualization {
     }
 
     wrangleData() {
-        // calculate average transacted prices by district
+        // Calculate average transacted prices by district
         this.districtAverages = this.calculateAveragePricesByDistrict(this.csvData);
+
+        // Add avgTransactedPrice and District Name to GeoJSON features
+        this.geojson.features.forEach(feature => {
+            const postalDistrict = feature.properties.postal_district.toString();
+
+            // Add average transacted price
+            feature.properties.avgTransactedPrice = postalDistrict
+                ? parseFloat(this.districtAverages[postalDistrict])
+                : null;
+
+            // Find the first matching row to get the district name
+            const matchingRow = this.csvData.find(row => row['Postal District'] === postalDistrict);
+            feature.properties.districtName = matchingRow ? matchingRow['District Name'] : 'Unknown';
+        });
+
         this.updateVis();
     }
 
@@ -43,49 +53,43 @@ export default class MapVisualization {
 
         csvData.forEach(d => {
             const district = d['Postal District'];
-            const price = parseFloat(d['Transacted Price ($)'].replace(',', ''));
+            const price = parseFloat(d['Transacted Price ($)']);
+
             if (!districtPrices[district]) {
                 districtPrices[district] = { total: 0, count: 0 };
             }
+
             districtPrices[district].total += price;
             districtPrices[district].count += 1;
         });
 
-        // calculate the average price
+        // Calculate the average price
         const districtAverages = {};
         for (const district in districtPrices) {
-            districtAverages[district] = (districtPrices[district].total / districtPrices[district].count).toFixed(2);
+            districtAverages[district] = (
+                districtPrices[district].total / districtPrices[district].count
+            ).toFixed(2);
         }
 
         return districtAverages;
     }
 
-    mapPlanningAreaToPostalDistrict(planningArea) {
-        const districtKeys = Object.keys(this.lookupJson);
-        for (const districtKey of districtKeys) {
-            const locations = this.lookupJson[districtKey]['General Location'];
-            if (locations.includes(planningArea)) {
-                return districtKey;
-            }
-        }
-        return null;
-    }
-
     handleMouseover(event, d) {
-        const { planning_area, district, postalDistrict } = d.properties;
+        const district = d.properties.postal_district;
+        const subzone = d.properties.SUBZONE_N;
+        const planning_area = d.properties.PLN_AREA_N;
+        const districtName = d.properties.districtName || 'Unknown';
         const avgTransactedPrice = d.properties.avgTransactedPrice || 'N/A';
-        const pixelArea = this.geoGenerator.area(d).toFixed(1);
-        const measure = this.geoGenerator.measure(d).toFixed(1);
         const bounds = this.geoGenerator.bounds(d);
         const centroid = this.geoGenerator.centroid(d);
 
         // Display tooltip with information and histogram container
         const tooltip = d3.select(`${this.svgContainerId} .info`)
             .html(`
-            <span class="badge badge-pill badge-info">Planning Area: ${planning_area}</span>
-            <span class="badge badge-pill badge-info">District: ${district}</span>
-            <span class="badge badge-pill badge-info">Postal District: ${postalDistrict}</span>
+            <span class="badge badge-pill badge-info">Postal District: ${district}</span>
+            <span class="badge badge-pill badge-info">District Name: ${districtName}</span>
             <span class="badge badge-pill badge-info">Avg Transacted Price: $${avgTransactedPrice}</span>
+            <h4 class="mt-5 text-base text-gray-200 text-center font-semibold">Avg Transacted Price by Area (sqm)</h4>
             <svg id="histogram-chart" width="500" height="300"></svg>
         `)
             .style('display', 'inline-block')
@@ -97,8 +101,10 @@ export default class MapVisualization {
 
         // Filter data for histogram
         const filteredData = this.csvData.filter(row =>
-            row['Postal District'] === postalDistrict || row['Planning Area'] === planning_area
+            row['Postal District'] === district.toString()
         );
+
+        console.log("filter", filteredData)
 
         // Render the histogram in the tooltip
         const histogramChart = new HistogramChart(
@@ -176,32 +182,25 @@ export default class MapVisualization {
             .style('max-height', `${tooltipHeight}px`)
             .style('overflow', 'auto')
             .style('pointer-events', 'none')
-            .style('background-color', '#1f1f1f')  // Dark card background from index.html
-            .style('color', '#e0e0e0')  // Light gray text for contrast
-            .style('border', '1px solid #333')  // Subtle border
-            .style('border-radius', '8px')  // Rounded corners
+            .style('background-color', '#1f1f1f')
+            .style('color', '#e0e0e0')
+            .style('border', '1px solid #333')
+            .style('border-radius', '8px')
             .style('padding', '15px')
-            .style('box-shadow', '0 4px 15px rgba(0, 0, 0, 0.5)')  // Matching shadow from chat bubble
-            .style('z-index', '1000');  // Ensure it's on top
+            .style('box-shadow', '0 4px 15px rgba(0, 0, 0, 0.5)')
+            .style('z-index', '1000');
     }
 
     updateVis() {
-        // create a scale for the heatmap
+        // Create a scale for the heatmap
         const avgPrices = Object.values(this.districtAverages).map(Number);
         const colorScale = d3.scaleSequential(d3.interpolateBlues)
             .domain([d3.min(avgPrices), d3.max(avgPrices)]);
 
-        // bind the CSV data to GeoJSON features and map postal district
-        this.geojson.features.forEach(feature => {
-            const planningArea = feature.properties.planning_area;
-            feature.properties.postalDistrict = this.mapPlanningAreaToPostalDistrict(planningArea);
+        const mapGroup = d3.select(`${this.svgContainerId} g.map`);
 
-            const postalDistrict = feature.properties.postalDistrict;
-            feature.properties.avgTransactedPrice = postalDistrict ? this.districtAverages[postalDistrict] : null;
-        });
-
-        // render the map paths
-        d3.select(`${this.svgContainerId} g.map`)
+        // Render the map paths
+        mapGroup
             .selectAll('path')
             .data(this.geojson.features)
             .join('path')
@@ -213,5 +212,23 @@ export default class MapVisualization {
             .on('mouseover', (event, d) => this.handleMouseover(event, d))
             .on('mouseout', () => this.handleMouseout())
             .style('cursor', 'pointer');
+
+        // Add text labels for postal districts, excluding 'unknown'
+        mapGroup
+            .selectAll('.district-label')
+            .data(this.geojson.features.filter(d => d.properties.postal_district !== 'Unknown'))
+            .join('text')
+            .attr('class', 'district-label')
+            .attr('x', d => this.geoGenerator.centroid(d)[0])
+            .attr('y', d => this.geoGenerator.centroid(d)[1])
+            .attr('text-anchor', 'middle')
+            .attr('alignment-baseline', 'middle')
+            .text(d => d.properties.postal_district)
+            .style('font-size', '12px')
+            .style('font-weight', 'bold')
+            .style('fill', 'black')
+            .style('stroke', 'white')
+            .style('stroke-width', '0.5px')
+            .style('pointer-events', 'none');
     }
 }

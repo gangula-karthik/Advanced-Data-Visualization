@@ -31,7 +31,7 @@ export default class DonutChart {
 
         // Create a group for the pie chart, positioned in the center
         this.chartGroup = this.svg.append("g")
-            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 30})`);
+            .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 35})`);
 
         // Create a group for the legend
         this.legendGroup = this.svg.append("g")
@@ -142,7 +142,7 @@ export default class DonutChart {
                 // Center the legend items horizontally
                 const totalWidth = dataReady.length * 100; // Each item takes up 100px
                 const startX = (this.width - totalWidth) / 2; // Calculate starting X to center
-                return `translate(${startX + i * 80}, -40)`; // Spread items evenly
+                return `translate(${startX + i * 82}, -40)`; // Spread items evenly
             });
 
         // Add colored rectangles

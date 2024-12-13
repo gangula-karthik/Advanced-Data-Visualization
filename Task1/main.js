@@ -3,10 +3,8 @@ import DonutChart from './donutChart.js';
 import BarChart from './barChart.js';
 import TimelineBrush from './timeline.js';
 
-const svgContainerId = '#content';
-const geojsonPath = './data/district_and_planning_area.geojson';
+const geojsonPath = './data/merged_output.geojson';
 const csvPath = './data/CommercialTrans_201910 to 202410.csv';
-const lookupJsonPath = './data/postal_district_lookup.json';
 
 let calls;
 
@@ -31,6 +29,39 @@ function populateDropdown(data, columnName, dropdownId, formatText = (value) => 
 
 $("#propertyName").on("change", updateCharts);
 $("#districtName").on("change", updateCharts);
+
+function updateKpiCards(data) {
+    // Calculate total properties
+    const totalProperties = new Set(data.map(row => row["Project Name"])).size;
+
+    // Calculate total revenue
+    const totalRevenue = d3.sum(data, row => row["Transacted Price ($)"]);
+
+    // Calculate price change
+    const initialAvgPrice = d3.mean(
+        data.filter(d => d["Sale Date"].getFullYear() === 2022),
+        d => d["Unit Price ($ PSF)"]
+    );
+    const latestAvgPrice = d3.mean(
+        data.filter(d => d["Sale Date"].getFullYear() === 2023),
+        d => d["Unit Price ($ PSF)"]
+    );
+    const priceChange = ((latestAvgPrice - initialAvgPrice) / initialAvgPrice) * 100;
+
+    // Find the hottest district
+    const districtRevenue = d3.rollup(
+        data,
+        v => d3.sum(v, d => d["Transacted Price ($)"]),
+        d => d["Postal District"]
+    );
+    const hottestDistrict = Array.from(districtRevenue).reduce((a, b) => b[1] > a[1] ? b : a);
+
+    // Update KPI cards with jQuery
+    $("#total-properties").text(totalProperties);
+    $("#total-revenue").text(`$${(totalRevenue / 1e6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} M`);
+    $("#price-change").text(`${priceChange.toFixed(2)}%`);
+    $("#hottest-district").text(`District ${hottestDistrict[0]}`);
+}
 
 
 
@@ -61,39 +92,6 @@ d3.csv(csvPath).then((data) => {
             row["Lease End Year"] = "Freehold";
         }
     });
-
-    function updateKpiCards(data) {
-        // Calculate total properties
-        const totalProperties = new Set(data.map(row => row["Project Name"])).size;
-
-        // Calculate total revenue
-        const totalRevenue = d3.sum(data, row => row["Transacted Price ($)"]);
-
-        // Calculate price change
-        const initialAvgPrice = d3.mean(
-            data.filter(d => d["Sale Date"].getFullYear() === 2022),
-            d => d["Unit Price ($ PSF)"]
-        );
-        const latestAvgPrice = d3.mean(
-            data.filter(d => d["Sale Date"].getFullYear() === 2023),
-            d => d["Unit Price ($ PSF)"]
-        );
-        const priceChange = ((latestAvgPrice - initialAvgPrice) / initialAvgPrice) * 100;
-
-        // Find the hottest district
-        const districtRevenue = d3.rollup(
-            data,
-            v => d3.sum(v, d => d["Transacted Price ($)"]),
-            d => d["Postal District"]
-        );
-        const hottestDistrict = Array.from(districtRevenue).reduce((a, b) => b[1] > a[1] ? b : a);
-
-        // Update KPI cards with jQuery
-        $("#total-properties").text(totalProperties);
-        $("#total-revenue").text(`$${(totalRevenue / 1e6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} M`);
-        $("#price-change").text(`${priceChange.toFixed(2)}%`);
-        $("#hottest-district").text(`District ${hottestDistrict[0]}`);
-    }
 
     updateKpiCards(data)
 
@@ -144,7 +142,21 @@ d3.csv(csvPath).then((data) => {
     const barChart = new BarChart('#barChart', data, "Floor Level", "Unit Price ($ PSM)");
     const timelineBrush = new TimelineBrush('#timeline-brush', data, (x0, x1) => {
         console.log(`Brushed range: ${x0} to ${x1}`);
+
+        // Check if a range is selected
+        const filteredData = x0 && x1
+            ? data.filter(d => {
+                const saleDate = new Date(d["Sale Date"]); // Ensure the date is parsed
+                return saleDate >= x0 && saleDate <= x1; // Check if the date falls in the range
+            })
+            : data; // If no range, use all data
+
+        // Update global data and charts
+        window.chartData = filteredData;
+        updateCharts();
     });
+
+    const mapVis = new MapVisualization('#content', geojsonPath, data);
 
     // Store charts globally for later updates
     window.donutChart1 = donutChart1;
@@ -165,5 +177,3 @@ function updateCharts() {
     if (window.barChart) window.barChart.wrangleData();
     if (window.timelineBrush) window.timelineBrush.wrangleData();
 }
-
-const mapVis = new MapVisualization(svgContainerId, geojsonPath, csvPath, lookupJsonPath);

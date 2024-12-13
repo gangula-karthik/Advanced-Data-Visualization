@@ -1,0 +1,172 @@
+{
+  "postals" : [
+    {
+      "id" : "01",
+      "district" : "01",
+      "sectors" : ["01","02","03","04","05"],
+      "locations" :  ["Raffles Place", "Cecil", "Marina", "People’s Park"]
+    },
+    {
+      "id" : "02",
+      "district" : "02",
+      "sectors" :  ["07", "08"],
+      "locations" :  ["Anson", "Tanjong Pagar"]
+    },
+    {
+      "id" : "03",
+      "district" : "03",
+      "sectors" :  ["14", "15", "16"],
+      "locations" :  ["Queenstown", "Tiong Bahru"]
+    },
+    {
+      "id" : "04",
+      "district" : "04",
+      "sectors" :  ["09", "10"],
+      "locations" :  ["Telok Blangah", "Harbourfront"]
+    },
+    {
+      "id" : "05",
+      "district" : "05",
+      "sectors" :  ["11", "12", "13"],
+      "locations" :  ["Pasir Panjang", "Hong Leong Garden", "Clementi New Town"]
+    },
+    {
+      "id" : "06",
+      "district" : "06",
+      "sectors" :  ["17"],
+      "locations" :  ["High Street", "Beach Road (part)"]
+    },
+    {
+      "id" : "07",
+      "district" : "07",
+      "sectors" :  ["18", "19"],
+      "locations" :  ["Middle Road", "Golden Mile"]
+    },
+    {
+      "id" : "08",
+      "district" : "08",
+      "sectors" :  ["20", "21"],
+      "locations" :  ["Little India"]
+    },
+    {
+      "id" : "09",
+      "district" : "09",
+      "sectors" :  ["22", "23"],
+      "locations" :  ["Orchard", "Cairnhill", "River Valley"]
+    },
+    {
+      "id" : "10",
+      "district" : "10",
+      "sectors" :  ["24", "25", "26", "27"],
+      "locations" :  ["Ardmore", "Bukit Timah", "Holland Road", "Tanglin"]
+    },
+    {
+      "id" : "11",
+      "district" : "11",
+      "sectors" :  ["28", "29", "30"],
+      "locations" :  ["Watten Estate", "Novena", "Thomson"]
+    },
+    {
+      "id" : "12",
+      "district" : "12",
+      "sectors" :  ["31", "32", "33"],
+      "locations" :  ["Balestier", "Toa Payoh", "Serangoon"]
+    },
+    {
+      "id" : "13",
+      "district" : "13",
+      "sectors" :  ["34", "35", "36", "37"],
+      "locations" :  ["Macpherson", "Braddell"]
+    },
+    {
+      "id" : "14",
+      "district" : "14",
+      "sectors" :  ["38", "39", "40", "41"],
+      "locations" :  ["Geylang", "Eunos"]
+    },
+    {
+      "id" : "15",
+      "district" : "15",
+      "sectors" :  ["42", "43", "44", "45"],
+      "locations" :  ["Katong", "Joo Chiat", "Amber Road"]
+    },
+    {
+      "id" : "16",
+      "district" : "16",
+      "sectors" :  ["46", "47", "48"],
+      "locations" :  ["Bedok", "Upper East Coast", "Eastwood", "Kew Drive"]
+    },
+    {
+      "id" : "17",
+      "district" : "17",
+      "sectors" :  ["49", "50", "81"],
+      "locations" :  ["Loyang", "Changi"]
+    },
+    {
+      "id" : "18",
+      "district" : "18",
+      "sectors" :  ["51, 52"],
+      "locations" :  ["Tampines", "Pasir Ris"]
+    },
+    {
+      "id" : "19",
+      "district" : "19",
+      "sectors" :  ["53", "54", "55", "82"],
+      "locations" :  ["Serangoon Garden", "Hougang", "Ponggol"]
+    },
+    {
+      "id" : "20",
+      "district" : "20",
+      "sectors" :  ["56", "57"],
+      "locations" :  ["Bishan", "Ang Mo Kio"]
+    },
+    {
+      "id" : "21",
+      "district" : "21",
+      "sectors" :  ["58", "59"],
+      "locations" :  ["Upper Bukit Timah", "Clementi Park", "Ulu Pandan"]
+    },
+    {
+      "id" : "22",
+      "district" : "22",
+      "sectors" :  ["60", "61", "62", "63", "64"],
+      "locations" :  ["Jurong"]
+    },
+    {
+      "id" : "23",
+      "district" : "22",
+      "sectors" :  ["65", "66", "67", "68"],
+      "locations" :  ["Hillview", "Dairy Farm", "Bukit Panjang", "Choa Chu Kang"]
+    },
+    {
+      "id" : "24",
+      "district" : "24",
+      "sectors" :  ["69", "70", "71"],
+      "locations" :  ["Lim Chu Kang", "Tengah"]
+    },
+    {
+      "id" : "25",
+      "district" : "25",
+      "sectors" :  ["72", "73"],
+      "locations" :  ["Kranji", "Woodgrove", "Woodlands"]
+    },
+    {
+      "id" : "26",
+      "district" : "26",
+      "sectors" :  ["77", "78"],
+      "locations" :  ["Upper Thomson", "Springleaf"]
+    },
+    {
+      "id" : "27",
+      "district" : "27",
+      "sectors" :  ["75", "76"],
+      "locations" :  ["Yishun", "Sembawang"]
+    },
+    {
+      "id" : "28",
+      "district" : "28",
+      "sectors" :  ["79", "80"],
+      "locations" :  ["Seletar"]
+    }
+  ]
+}
