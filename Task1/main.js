@@ -97,6 +97,7 @@ d3.csv(csvPath).then((data) => {
     updateKpiCards(data)
 
     window.originalData = data
+    window.chartData = data
 
     // Populate dropdowns
     populateDropdown(data, "Project Name", "propertyName");
@@ -170,6 +171,7 @@ function resetBrush() {
     // Reset brush for timelineBrush
     d3.select('#timeline-svg .brush').call(timelineBrush.brush.move, null);
     window.chartData = window.originalData;
+
     updateKpiCards(window.chartData);
 
     // Reset data to original state for all charts
@@ -196,13 +198,10 @@ function resetBrush() {
 
 
 function updateCharts() {
-    // Determine the data source - use brushed data if available, otherwise use original dataset
-    const dataToUse = window.chartData || calls;
+    const dataToUse = window.chartData;
 
-    // Update KPI cards with the filtered data
     updateKpiCards(dataToUse);
 
-    // Update each chart with the filtered data
     if (window.donutChart1) {
         window.donutChart1.data = dataToUse;
         window.donutChart1.wrangleData();

@@ -2,24 +2,19 @@ export default class DonutChart {
     constructor(svgContainerId, data, columnToAggregate) {
         this.svgContainerId = svgContainerId;
         this.data = data;
-        this.columnToAggregate = columnToAggregate; // The column name you want to aggregate
+        this.columnToAggregate = columnToAggregate;
 
-        this.width = 250;  // Fixed small width
-        this.height = 250; // Fixed small height
-        this.margin = 30;  // Minimal margin to save space
+        this.width = 250;
+        this.margin = 30;
+        this.height = 250;
 
-        // Calculate the radius
         this.radius = Math.min(this.width, this.height) / 2 - this.margin;
-
-        // Create the SVG container
         this.initVis();
     }
 
     initVis() {
-        // Remove any existing SVG to prevent duplicates
         d3.select(this.svgContainerId).selectAll("*").remove();
 
-        // Append the SVG object to the container
         this.svg = d3.select(this.svgContainerId)
             .append("svg")
             .attr("width", `${this.width}px`)
@@ -29,28 +24,24 @@ export default class DonutChart {
             .style("display", "block")
             .style("margin", "auto");
 
-        // Create a group for the pie chart, positioned in the center
         this.chartGroup = this.svg.append("g")
             .attr("transform", `translate(${this.width / 2}, ${this.height / 2 - 35})`);
 
-        // Create a group for the legend
         this.legendGroup = this.svg.append("g")
             .attr("transform", `translate(0, ${this.height - 80})`);
 
-        // Set the color scale
         this.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
 
-        // Compute the position of each group on the pie
         this.pieGenerator = d3.pie()
             .value(d => d.value)
             .sort(null);
 
-        // Define the arc generator
+        // making the arc generator function
         this.arcGenerator = d3.arc()
             .innerRadius(this.radius * 0.5)
             .outerRadius(this.radius);
 
-        // Create a tooltip
+        // creating a tooltip to display the values
         this.tooltip = d3.select("body")
             .append("div")
             .attr("class", "donut-tooltip")
@@ -75,16 +66,13 @@ export default class DonutChart {
 
 
     wrangleData() {
-        // Get selected values from the dropdowns
         const selectedProperty = $("#propertyName").val();
         const selectedDistrict = $("#districtName").val();
 
-        // Get the value from the range slider
         const tenureRange = $("#tenureSlider").slider("values");
         const [minTenure, maxTenure] = tenureRange;
         const sliderMax = $("#tenureSlider").slider("option", "max");
 
-        // Filter the data based on the selected dropdown values and tenure range
         let filteredData = this.data;
 
         if (selectedProperty && selectedProperty !== "all") {
@@ -105,20 +93,15 @@ export default class DonutChart {
             });
         }
 
-        // Group the filtered data based on the specified column and count the occurrences
         const groupedData = d3.rollups(
             filteredData,
             v => v.length,
             d => d[this.columnToAggregate]
         ).map(([key, value]) => ({ key, value }));
 
-        // Sort data to ensure consistent color assignment
         groupedData.sort((a, b) => b.value - a.value);
 
-        // Prepare the data for the pie layout
         this.dataReady = this.pieGenerator(groupedData);
-
-        // Update the visualizations after filtering the data
         this.updateVis();
     }
 
