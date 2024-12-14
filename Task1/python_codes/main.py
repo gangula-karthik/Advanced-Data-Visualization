@@ -7,10 +7,12 @@ from pprint import pprint
 import json
 import os
 from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv, find_dotenv
 
 
 app = Flask(__name__)
+CORS(app, resources={r"/query": {"origins": "http://localhost:5500"}})
 
 load_dotenv(find_dotenv())
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
