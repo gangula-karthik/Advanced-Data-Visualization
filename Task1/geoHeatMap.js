@@ -48,13 +48,10 @@ export default class MapVisualization {
         if (!isNaN(minTenure) && !isNaN(maxTenure)) {
             filteredData = filteredData.filter(row => {
                 const leaseEndYear = row["Lease End Year"];
-                if (leaseEndYear === "Freehold") {
-                    return maxTenure === sliderMax;
-                }
-                return leaseEndYear >= minTenure && leaseEndYear <= maxTenure;
+                return leaseEndYear >= minTenure &&
+                    leaseEndYear <= maxTenure;
             });
         }
-
 
         this.districtAverages = this.calculateAveragePricesByDistrict(filteredData);
 

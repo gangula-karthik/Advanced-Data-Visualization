@@ -30,39 +30,63 @@ $("#propertyName").on("change", updateCharts);
 $("#districtName").on("change", updateCharts);
 
 function updateKpiCards(data) {
-    // Calculate total properties
-    const totalProperties = new Set(data.map(row => row["Project Name"])).size;
+    // Apply filters
+    const selectedProperty = $("#propertyName").val();
+    const selectedDistrict = $("#districtName").val();
+    const tenureRange = $("#tenureSlider").slider("values");
+    const [minTenure, maxTenure] = tenureRange;
+    const sliderMax = $("#tenureSlider").slider("option", "max");
+    const isFreeholdIncluded = maxTenure === sliderMax;
 
-    // Calculate total revenue
-    const totalRevenue = d3.sum(data, row => row["Transacted Price ($)"]);
+    let filteredData = data;
 
-    // Calculate price change
-    const earliestSaleDate = d3.min(data, d => d["Sale Date"]);
-    const latestSaleDate = d3.max(data, d => d["Sale Date"]);
+    if (selectedProperty && selectedProperty !== "all") {
+        filteredData = filteredData.filter(row => row["Project Name"] === selectedProperty);
+    }
+
+    if (selectedDistrict && selectedDistrict !== "all") {
+        filteredData = filteredData.filter(row => row["Postal District"] === selectedDistrict);
+    }
+
+    if (!isNaN(minTenure) && !isNaN(maxTenure)) {
+        filteredData = filteredData.filter(row => {
+            const leaseEndYear = row["Lease End Year"];
+            return leaseEndYear >= minTenure &&
+                leaseEndYear <= maxTenure;
+        });
+    }
+
+    // Calculate KPIs based on filtered data
+    const totalProperties = new Set(filteredData.map(row => row["Project Name"])).size;
+
+    const totalRevenue = d3.sum(filteredData, row => row["Transacted Price ($)"]);
+
+    const earliestSaleDate = d3.min(filteredData, d => d["Sale Date"]);
+    const latestSaleDate = d3.max(filteredData, d => d["Sale Date"]);
     const initialAvgPrice = d3.mean(
-        data.filter(d => d["Sale Date"].getFullYear() === earliestSaleDate.getFullYear()),
+        filteredData.filter(d => d["Sale Date"].getFullYear() === earliestSaleDate.getFullYear()),
         d => d["Unit Price ($ PSM)"]
     );
     const latestAvgPrice = d3.mean(
-        data.filter(d => d["Sale Date"].getFullYear() === latestSaleDate.getFullYear()),
+        filteredData.filter(d => d["Sale Date"].getFullYear() === latestSaleDate.getFullYear()),
         d => d["Unit Price ($ PSM)"]
     );
     const priceChange = ((latestAvgPrice - initialAvgPrice) / initialAvgPrice) * 100;
 
-    // Find the hottest district
     const districtRevenue = d3.rollup(
-        data,
+        filteredData,
         v => d3.mean(v, d => d["Transacted Price ($)"]),
         d => d["Postal District"]
     );
     const hottestDistrict = Array.from(districtRevenue).reduce((a, b) => b[1] > a[1] ? b : a);
 
-    // Update KPI cards with jQuery
+    // Update KPI cards
     $("#total-properties").text(totalProperties);
     $("#total-revenue").text(`$${(totalRevenue / 1e6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} M`);
     $("#price-change").text(`${priceChange.toFixed(2)}%`);
     $("#hottest-district").text(`District ${hottestDistrict[0]}`);
 }
+
 
 
 
@@ -76,9 +100,8 @@ d3.csv(csvPath).then((data) => {
         row["Transacted Price ($)"] = +row["Transacted Price ($)"].replace(/,/g, "");
         row["Unit Price ($ PSF)"] = +row["Unit Price ($ PSF)"].replace(/,/g, "");
         row["Unit Price ($ PSM)"] = +row["Unit Price ($ PSM)"].replace(/,/g, "");
-        row["Floor Level"] = row["Floor Level"].replace("-", "NA")
+        row["Floor Level"] = row["Floor Level"].replace("-", "NA");
         row["Sale Date"] = d3.timeParse("%b-%y")(row["Sale Date"]);
-
 
         const tenure = row["Tenure"]; // Get the "Tenure" column value
         const match = tenure.match(/(\d+)\s+yrs\s+lease\s+commencing\s+from\s+(\d{4})/); // Extract duration and start year
@@ -91,23 +114,20 @@ d3.csv(csvPath).then((data) => {
             row["Lease Start Year"] = startYear;
             row["Lease End Year"] = endYear;
         } else {
-            row["Lease Start Year"] = "Freehold";
-            row["Lease End Year"] = "Freehold";
+            row["Lease End Year"] = 11999; // Hardcode Freehold to 11999 which is +1 from the maxYear
         }
     });
 
-    updateKpiCards(data)
-
-    window.originalData = data
-    window.chartData = data
+    window.originalData = data;
+    window.chartData = data;
 
     // Populate dropdowns
     populateDropdown(data, "Project Name", "propertyName");
     populateDropdown(data, "Postal District", "districtName", (value) => `District ${value}`, true);
 
     // Get min and max years for the tenure slider
-    const minYear = Math.min(...data.map(row => row["Lease End Year"]).filter(val => val !== "Freehold"));
-    const maxYear = Math.max(...data.map(row => row["Lease End Year"]).filter(val => val !== "Freehold"));
+    const minYear = Math.min(...data.map(row => row["Lease End Year"]).filter(val => val !== 11999));
+    const maxYear = Math.max(...data.map(row => row["Lease End Year"]).filter(val => val !== 11999));
 
     // Initialize the tenure slider
     $("#tenureSlider").slider({
@@ -116,9 +136,9 @@ d3.csv(csvPath).then((data) => {
         max: maxYear + 1, // Add an extra step for "Freehold"
         values: [minYear, maxYear + 1], // Default to maxYear + 1 (Freehold)
         slide: function (event, ui) {
-            // Special handling for Freehold
-            const startLabel = ui.values[0] > maxYear ? "Freehold" : `Year ${ui.values[0]}`;
-            const endLabel = ui.values[1] > maxYear ? "Freehold" : `Year ${ui.values[1]}`;
+            // Display "Freehold" only if the value is 11999, else show normal numbers
+            const startLabel = ui.values[0] === 11999 ? "Freehold" : `Year ${ui.values[0]}`;
+            const endLabel = ui.values[1] === 11999 ? "Freehold" : `Year ${ui.values[1]}`;
 
             // Update the range label dynamically
             $("#tenureRangeLabel").text(`${startLabel} - ${endLabel}`);
@@ -137,8 +157,11 @@ d3.csv(csvPath).then((data) => {
         }
     });
 
+    // Set initial slider labels
     $("#tenureRangeLabel").text(`Year ${minYear} - Year ${maxYear}`);
     $("#minTenureLabel").text(`Year ${minYear}`);
+
+    updateKpiCards(data)
 
     // Create chart instances after data is ready
     const donutChart1 = new DonutChart("#donutChart1", data, "Property Type");

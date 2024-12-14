@@ -41,8 +41,6 @@ export default class BarChart {
         const [minTenure, maxTenure] = tenureRange;
         const sliderMax = $("#tenureSlider").slider("option", "max");
 
-        const isFreeholdIncluded = maxTenure === sliderMax;
-
         let filteredData = this.data;
 
         if (selectedProperty && selectedProperty !== "all") {
@@ -56,11 +54,7 @@ export default class BarChart {
         if (!isNaN(minTenure) && !isNaN(maxTenure)) {
             filteredData = filteredData.filter(row => {
                 const leaseEndYear = row["Lease End Year"];
-                if (isFreeholdIncluded) {
-                    return leaseEndYear === "Freehold";
-                }
-                return leaseEndYear !== "Freehold" &&
-                    leaseEndYear >= minTenure &&
+                return leaseEndYear >= minTenure &&
                     leaseEndYear <= maxTenure;
             });
         }
