@@ -1,23 +1,17 @@
-/* Custom full dark mode styles */
 .full-dark-mode {
     background-color: #121212;
-    /* Very dark background */
     color: #e0e0e0;
-    /* Light gray text for better contrast */
 }
 
 .full-dark-card {
     background-color: #1f1f1f;
-    /* Darker card background */
     border: 1px solid #333;
-    /* Subtle border for separation */
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .full-dark-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    /* Deeper shadow for emphasis */
 }
 
 .full-dark-select {
@@ -113,9 +107,7 @@
     font-size: 12px;
     pointer-events: none;
     display: none;
-    /* Hidden by default */
     z-index: 1000;
-    /* Make sure it appears above other elements */
 }
 
 
@@ -135,7 +127,6 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Additional styles for consistent bento grid */
 .bento-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -162,35 +153,29 @@
     text-align: center;
     vertical-align: baseline;
     border-radius: 10rem;
-    /* pill shape */
     transition: all 0.15s ease-in-out;
 }
 
 .badge-pill {
     border-radius: 10rem;
-    /* pill shape */
     padding: 0.5em 1em;
-    /* larger padding for pill shape */
 }
 
 .badge-info {
     color: #fff;
     background-color: #0072be;
-    /* Bootstrap info color */
 }
 
 .badge-info:hover {
     background-color: #0072be;
-    /* Slightly darker shade on hover */
 }
 
-/* Dark Mode Specific Styles */
 .timeline-container {
     background-color: #1f1f1f;
-    /* Dark background */
     border-radius: 0.75rem;
     padding: 0.75rem;
     border: 1px solid #333;
+    margin-top: 25px;
 }
 
 .timeline-title {
@@ -201,13 +186,10 @@
 
 #timeline-brush {
     background-color: #2f2f2f;
-    /* Adjusted for a slightly lighter dark background */
     border: 1px solid #4f4f4f;
-    /* Adjusted for a slightly lighter dark border */
     border-radius: 0.75rem;
     transition: all 0.3s ease;
     height: 4rem;
-    /* Reduced height */
 }
 
 #timeline-brush svg {
@@ -239,10 +221,8 @@
 
 .reset-filter-btn:hover {
     background-color: #2563eb;
-    /* Darker blue on hover */
 }
 
-/* Responsive Design */
 @media (max-width: 640px) {
     .timeline-container {
         padding: 0.5rem;
