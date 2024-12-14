@@ -126,14 +126,14 @@ d3.csv(csvPath).then((data) => {
     populateDropdown(data, "Postal District", "districtName", (value) => `District ${value}`, true);
 
     // Get min and max years for the tenure slider
-    const minYear = Math.min(...data.map(row => row["Lease End Year"]).filter(val => val !== 11999));
-    const maxYear = Math.max(...data.map(row => row["Lease End Year"]).filter(val => val !== 11999));
+    const minYear = Math.min(...data.map(row => row["Lease End Year"]));
+    const maxYear = Math.max(...data.map(row => row["Lease End Year"]));
 
     // Initialize the tenure slider
     $("#tenureSlider").slider({
         range: true,
         min: minYear,
-        max: maxYear + 1, // Add an extra step for "Freehold"
+        max: maxYear, // Add an extra step for "Freehold"
         values: [minYear, maxYear + 1], // Default to maxYear + 1 (Freehold)
         slide: function (event, ui) {
             // Display "Freehold" only if the value is 11999, else show normal numbers
@@ -158,7 +158,10 @@ d3.csv(csvPath).then((data) => {
     });
 
     // Set initial slider labels
-    $("#tenureRangeLabel").text(`Year ${minYear} - Year ${maxYear}`);
+    const initialValues = $("#tenureSlider").slider("values");
+    const initialStartLabel = initialValues[0] === maxYear + 1 ? "Freehold" : `Year ${initialValues[0]}`;
+    const initialEndLabel = initialValues[1] === maxYear + 1 ? "Freehold" : `Year ${initialValues[1]}`;
+    $("#tenureRangeLabel").text(`${initialStartLabel} - Freehold`);
     $("#minTenureLabel").text(`Year ${minYear}`);
 
     updateKpiCards(data)
