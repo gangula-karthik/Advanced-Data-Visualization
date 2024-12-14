@@ -82,7 +82,9 @@ function updateKpiCards(data) {
 
     // Update KPI cards
     $("#total-properties").text(totalProperties);
-    $("#total-revenue").text(`$${(totalRevenue / 1e6).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} M`);
+    let revenueScale = totalRevenue >= 1e9 ? 'B' : totalRevenue >= 1e6 ? 'M' : 'K';
+    let revenueValue = totalRevenue >= 1e9 ? totalRevenue / 1e9 : totalRevenue >= 1e6 ? totalRevenue / 1e6 : totalRevenue / 1e3;
+    $("#total-revenue").text(`$${revenueValue.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} ${revenueScale}`);
     $("#price-change").text(`${priceChange.toFixed(2)}%`);
     $("#hottest-district").text(`District ${hottestDistrict[0]}`);
 }
