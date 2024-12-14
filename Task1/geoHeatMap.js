@@ -153,46 +153,25 @@ export default class MapVisualization {
     }
 
     adjustTooltipPosition(event, tooltip) {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-
         const scrollX = window.scrollX || window.pageXOffset;
         const scrollY = window.scrollY || window.pageYOffset;
 
         const tooltipWidth = 500;
         const tooltipHeight = 600;
         const padding = 10;
-        const verticalOffset = 100; // Adjusted to make tooltip appear slightly above
 
         const mouseX = event.clientX;
         const mouseY = event.clientY;
 
         let left = mouseX + padding;
         let top = mouseY - tooltipHeight; // Adjusted to make tooltip appear slightly above
-
-        if (left + tooltipWidth > viewportWidth - padding) {
-            left = mouseX - tooltipWidth - padding;
-        }
-
-        if (left < padding) {
-            left = padding;
-        }
-
-        if (top < padding) {
-            top = mouseY + verticalOffset; // Adjusted to make tooltip appear slightly above
-        }
-
-        if (top + tooltipHeight > viewportHeight - padding) {
-            top = Math.max(padding, mouseY - tooltipHeight - verticalOffset); // Adjusted to make tooltip appear slightly above
-        }
-
         left += scrollX;
         top += scrollY;
 
         tooltip
             .style('position', 'absolute')
             .style('left', `${left}px`)
-            .style('top', `${top}px`)
+            .style('top', `${top - 150}px`)
             .style('width', `${tooltipWidth}px`)
             .style('max-height', `${tooltipHeight}px`)
             .style('overflow', 'auto')
