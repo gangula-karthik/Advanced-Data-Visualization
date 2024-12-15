@@ -182,7 +182,7 @@ export default class MapVisualization {
             .style('border-radius', '8px')
             .style('padding', '15px')
             .style('box-shadow', '0 4px 15px rgba(0, 0, 0, 0.5)')
-            .style('z-index', '1000');
+            .style('z-index', '9999'); // Increased z-index to ensure it appears above all cards
     }
 
     updateVis() {

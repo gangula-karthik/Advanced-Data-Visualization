@@ -39,7 +39,6 @@ export default class BarChart {
             .style("box-shadow", "0 4px 6px rgba(0,0,0,0.1)")
             .style("font-size", "13px")
             .style("pointer-events", "none")
-            .style("z-index", "10")
             .style("transform", "translate(0%, -50%)")
             .style("transition", "opacity 0.2s ease-in-out");
 
