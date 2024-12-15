@@ -47,6 +47,7 @@
     </nav>
 
     <main class="container mx-auto px-4 py-16 flex-grow">
+        <!-- Hero Section -->
         <section class="text-center max-w-4xl mx-auto">
             <h1
                 class="text-5xl font-extrabold mb-6 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent overflow-visible">
@@ -67,6 +68,7 @@
             </a>
         </section>
 
+        <!-- Feature Cards Section -->
         <section class="mt-20">
             <div class="grid md:grid-cols-3 gap-8">
                 <div class="bg-dark-card border border-dark-border rounded-xl p-6 hover:scale-105 transition-transform">
@@ -100,6 +102,104 @@
                         chloropleth maps, donut charts, bar charts, histograms, and brush tools.</p>
                 </div>
             </div>
+        </section>
+
+        <!-- Instructions Section -->
+        <section class="mt-20">
+            <h2 class="text-3xl font-extrabold mb-6">
+                Instructions & Notes
+            </h2>
+            <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                Follow these steps to maximize the value of our platform:
+            </p>
+            <div class="space-y-6">
+                <div class="flex items-start">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold">
+                        1
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-white text-lg">
+                            The website is hosted at: <a href="https://karthik-adv-assignment.netlify.app"
+                                class="text-blue-400 hover:underline">https://karthik-adv-assignment.netlify.app</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold">
+                        2
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-white text-lg">
+                            For the <span class="font-semibold text-purple-400">URA_GPT</span> to work, you need to add
+                            your
+                            <span class="font-semibold text-green-400">OPENAI_API_KEY</span>. Place it in the
+                            <code class="bg-gray-800 text-white px-2 py-1 rounded">.env</code> file inside
+                            <code class="bg-gray-800 text-white px-2 py-1 rounded">/Task1/python_codes/</code> folder.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold">
+                        3
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-white text-lg">
+                            For the <span class="font-semibold text-teal-400">choropleth map</span>, no publicly
+                            available
+                            GeoJSON file exists for postal district polygons. Several methods and experiments are
+                            documented in
+                            <code
+                                class="bg-gray-800 text-white px-2 py-1 rounded">/Task1/python_codes/attempting_combining_postal_district.ipynb</code>.
+                            The successful method is explained in
+                            <code
+                                class="bg-gray-800 text-white px-2 py-1 rounded">/Task1/python_codes/preparing_geojson.ipynb</code>.
+                            where I automatically and did some manual mapping of the subzones in the masterzoneplanning
+                            geojson file to create the final output geojson that I am making use of now. The reason I
+                            had to go through all the trouble is because the regular planning area geojson that I would
+                            usually use doesnt contain all the postal districts information and i cannot map it to some
+                            locations as well like district 6, 7 and 8 are missing.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold">
+                        4
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-white text-lg">
+                            Experimentation with GPT is documented in
+                            <code
+                                class="bg-gray-800 text-white px-2 py-1 rounded">/Task1/python_codes/ura_property_gpt.ipynb</code>.
+                            To run the Flask server, use the code in
+                            <code class="bg-gray-800 text-white px-2 py-1 rounded">/Task1/python_codes/main.py</code>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Appendix Section -->
+        <section class="mt-20">
+            <h2 class="text-3xl font-bold mb-4">References</h2>
+            <p class="text-gray-400 mb-6">Supplementary details and references:</p>
+            <ul class="list-disc list-inside text-gray-400 space-y-2">
+                <li><a href="https://www.d3indepth.com/geographic/" class="text-blue-500 hover:underline">Choropleth
+                        Map</a></li>
+                <li><a href="https://data.gov.sg/collections/1749/view" class="text-blue-500 hover:underline">Subzone
+                        master planning GeoJSON file</a></li>
+                <li><a href="https://www.ura.gov.sg/Corporate/-/media/Corporate/Property/PMI-Online/List_Of_Postal_Districts.pdf"
+                        class="text-blue-500 hover:underline">Postal District Mapping</a></li>
+                <li><a href="https://d3-graph-gallery.com/graph/donut_basic.html"
+                        class="text-blue-500 hover:underline">Donut Chart</a></li>
+                <li><a href="https://docs.llamaindex.ai/en/stable/examples/query_engine/pandas_query_engine/"
+                        class="text-blue-500 hover:underline">Llamaindex documentation</a></li>
+                <li>AI Tools: ChatGPT</li>
+            </ul>
         </section>
     </main>
 

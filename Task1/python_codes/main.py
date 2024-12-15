@@ -12,7 +12,7 @@ from dotenv import load_dotenv, find_dotenv
 
 
 app = Flask(__name__)
-CORS(app, resources={r"/query": {"origins": "http://localhost:5500"}})
+CORS(app)
 
 load_dotenv(find_dotenv())
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -24,7 +24,7 @@ query_engine = PandasQueryEngine(df=df, verbose=True)
 
 
 instruction_str = """\
-1. Convert the query to executable Python code using Pandas.
+1. Convert the query to executable Python code using Pandas, ensure that the columns are identified and mapped correctly.
 2. The final line of code should be a Python expression that can be called with the `eval()` function.
 3. The code should represent a solution to the query.
 4. PRINT ONLY THE EXPRESSION.
@@ -59,6 +59,7 @@ def handle_query():
             return jsonify({"error": "Query string is required."}), 400
 
         response = query_engine.query(query_str)
+        print("response", response.response, end="\n\n\n\n")
 
         return jsonify({"query": query_str, "result": response.response})
     except Exception as e:

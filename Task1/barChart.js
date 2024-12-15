@@ -28,6 +28,21 @@ export default class BarChart {
             .append("g")
             .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
+        this.tooltip = d3.select("body").append("div")
+            .style("position", "absolute")
+            .style("background", "#1f1f1f")
+            .style("color", "#fff")
+            .style("padding", "12px")
+            .style("border-radius", "8px")
+            .style("opacity", 0.95)
+            .style("border", "1px solid #333")
+            .style("box-shadow", "0 4px 6px rgba(0,0,0,0.1)")
+            .style("font-size", "13px")
+            .style("pointer-events", "none")
+            .style("z-index", "10")
+            .style("transform", "translate(0%, -50%)")
+            .style("transition", "opacity 0.2s ease-in-out");
+
         this.initScales();
         this.initAxes();
 
@@ -63,8 +78,10 @@ export default class BarChart {
 
         this.aggregatedData = Array.from(groupedData, ([key, values]) => ({
             [this.xColumn]: key,
-            [this.yColumn]: d3.mean(values, d => d[this.yColumn])
-        }));
+            [this.yColumn]: d3.mean(values, d => d[this.yColumn]),
+            count: values.length // Include count for tooltip
+        }))
+            .filter(d => d[this.xColumn] !== null && d[this.xColumn] !== undefined && d[this.xColumn] !== 'NA'); // Filter out NA values
 
         this.aggregatedData.sort((a, b) => b[this.yColumn] - a[this.yColumn]);
 
@@ -80,7 +97,6 @@ export default class BarChart {
             .range([this.height, 0]);
 
         this.colorScale = d3.scaleOrdinal(d3.schemeTableau10.filter((color, index) => index !== 2));
-
     }
 
     initAxes() {
@@ -126,7 +142,7 @@ export default class BarChart {
 
         this.svg.select(".x-axis")
             .transition()
-            .duration(1000)
+            .duration(750) // Include transition with 750 duration
             .call(d3.axisBottom(this.xScale))
             .selectAll("text")
             .attr("transform", "translate(-10,0)rotate(-45)")  // Rotate labels for readability
@@ -136,7 +152,7 @@ export default class BarChart {
 
         this.svg.select(".y-axis")
             .transition()
-            .duration(1000)
+            .duration(750) // Include transition with 750 duration
             .call(d3.axisLeft(this.yScale).tickFormat(d => `$${d}`))
             .selectAll("text")
             .style("fill", "white");
@@ -159,10 +175,38 @@ export default class BarChart {
             .attr("width", this.xScale.bandwidth())
             .attr("height", 0)  // Start with height 0 for animation
             .attr("fill", d => this.colorScale(d[this.xColumn]))
+            .on("mouseover", (event, d) => {
+                const percentage = ((d.count / d3.sum(this.aggregatedData, d => d.count)) * 100).toFixed(2);
+                this.tooltip
+                    .style("visibility", "visible")
+                    .style("opacity", "0.95")
+                    .html(`
+                    <div style="display: flex; align-items: center; margin-bottom: 6px;">
+                        <div style="width: 12px; height: 12px; background-color: ${this.colorScale(d[this.xColumn])}; margin-right: 8px; border-radius: 2px;"></div>
+                        <strong style="color: #fff;">${d[this.xColumn]}</strong>
+                    </div>
+                    <div style="color: #aaa;">
+                        Count: ${d.count}<br>
+                        Percentage: ${percentage}%<br>
+                    </div>
+                `)
+                    .style("left", `${event.pageX + 10}px`)
+                    .style("top", `${event.pageY}px`)
+            })
+            .on("mousemove", (event) => {
+                this.tooltip
+                    .style("top", (event.pageY - 30) + "px")
+                    .style("left", (event.pageX - 30) + "px");
+            })
+            .on("mouseout", () => {
+                this.tooltip
+                    .style("visibility", "hidden")
+                    .style("opacity", "0");
+            })
             .transition()
-            .duration(1000)
+            .duration(750) // Include transition with 750 duration
             .attr("y", d => this.yScale(d[this.yColumn]))
-            .attr("height", d => this.height - this.yScale(d[this.yColumn]));  // Animate height
+            .attr("height", d => this.height - this.yScale(d[this.yColumn]));
 
         const average = d3.mean(this.aggregatedData, d => d[this.yColumn]);
 

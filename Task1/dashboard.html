@@ -47,8 +47,21 @@
 
             <!-- Tenure Filter -->
             <div class="full-dark-card p-4 rounded-lg shadow-md">
-                <label for="tenureSlider" class="text-sm font-medium block mb-3 text-gray-200">Tenure (Years)</label>
-                <div id="tenureSlider" class="slider h-1 bg-gray-700 rounded-full cursor-pointer relative">
+                <div class="flex justify-between items-center relative">
+                    <label for="tenureSlider" class="text-sm font-medium text-gray-200">
+                        Tenure (Years)
+                    </label>
+                    <div class="relative">
+                        <i class="fas fa-info-circle text-gray-400 hover:text-gray-600 cursor-pointer info-icon"></i>
+                        <div id="infoTooltip"
+                            class="hidden absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white text-xs p-2 rounded shadow-md max-w-xs z-10">
+                            Adjust the slider to filter properties by lease tenure. Drag the handles to set the minimum
+                            and maximum
+                            years, or select "Freehold" for properties without a lease expiry.
+                        </div>
+                    </div>
+                </div>
+                <div id="tenureSlider" class="slider h-1 bg-gray-700 rounded-full cursor-pointer relative mt-3">
                     <div class="slider-track absolute h-full bg-blue-600 rounded-full"></div>
                 </div>
                 <div class="flex justify-between items-center mt-3 text-xs text-gray-400">
@@ -157,9 +170,15 @@
             </div>
 
             <!-- Bar Chart Section -->
-            <div class="full-dark-card card rounded-lg shadow-md p-6 h-full">
+            <div class="full-dark-card card rounded-lg shadow-md p-6 h-full relative">
                 <h5 class="text-lg font-semibold mb-4">Floor Level vs Cost Analysis</h5>
                 <div id="barChart" class="w-full h-60"></div> <!-- Larger height -->
+                <i
+                    class="fas fa-info-circle absolute top-0 right-0 m-4 text-gray-400 hover:text-gray-600 info-icon"></i>
+                <div id="infoTooltip"
+                    class="hidden absolute right-0 top-0 mt-8 bg-gray-700 text-white text-sm p-2 rounded shadow-md max-w-xs z-10 transform translate-x-20">
+                    Floor levels of NA were not included in this chart analysis
+                </div>
             </div>
         </div>
     </div>

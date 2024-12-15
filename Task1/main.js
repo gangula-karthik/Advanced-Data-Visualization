@@ -6,6 +6,19 @@ import TimelineBrush from './timeline.js';
 const geojsonPath = './data/merged_output.geojson';
 const csvPath = './data/CommercialTrans_201910 to 202410.csv';
 
+document.addEventListener('DOMContentLoaded', () => {
+    const infoIcon = document.querySelector('.info-icon');
+    const infoTooltip = document.getElementById('infoTooltip');
+
+    infoIcon.addEventListener('mouseenter', () => {
+        infoTooltip.classList.remove('hidden');
+    });
+
+    infoIcon.addEventListener('mouseleave', () => {
+        infoTooltip.classList.add('hidden');
+    });
+});
+
 
 function populateDropdown(data, columnName, dropdownId, formatText = (value) => value, isNumeric = false) {
     let uniqueValues = Array.from(new Set(data.map(row => row[columnName])));
@@ -30,7 +43,16 @@ $("#propertyName").on("change", updateCharts);
 $("#districtName").on("change", updateCharts);
 
 function updateKpiCards(data) {
-    // Apply filters
+    if (!data || data.length === 0) {
+        // Reset KPI values to indicate no data
+        $("#total-properties").text("0");
+        $("#total-revenue").text("$0");
+        $("#price-change").text("N/A");
+        $("#hottest-district").text("N/A");
+        return;
+    }
+
+    // Proceed with calculations if data is not empty
     const selectedProperty = $("#propertyName").val();
     const selectedDistrict = $("#districtName").val();
     const tenureRange = $("#tenureSlider").slider("values");
@@ -56,9 +78,16 @@ function updateKpiCards(data) {
         });
     }
 
-    // Calculate KPIs based on filtered data
-    const totalProperties = new Set(filteredData.map(row => row["Project Name"])).size;
+    // Proceed with KPI calculations if filteredData has results
+    if (filteredData.length === 0) {
+        $("#total-properties").text("0");
+        $("#total-revenue").text("$0");
+        $("#price-change").text("N/A");
+        $("#hottest-district").text("N/A");
+        return;
+    }
 
+    const totalProperties = filteredData.map(row => row["Project Name"]).length;
     const totalRevenue = d3.sum(filteredData, row => row["Transacted Price ($)"]);
 
     const earliestSaleDate = d3.min(filteredData, d => d["Sale Date"]);
@@ -88,8 +117,6 @@ function updateKpiCards(data) {
     $("#price-change").text(`${priceChange.toFixed(2)}%`);
     $("#hottest-district").text(`District ${hottestDistrict[0]}`);
 }
-
-
 
 
 d3.csv(csvPath).then((data) => {
@@ -231,6 +258,16 @@ function updateCharts() {
     const dataToUse = window.chartData;
 
     updateKpiCards(dataToUse);
+
+    if (!dataToUse || dataToUse.length === 0) {
+        // Clear charts when there's no data
+        if (window.donutChart1) window.donutChart1.clear();
+        if (window.donutChart2) window.donutChart2.clear();
+        if (window.barChart) window.barChart.clear();
+        if (window.timelineBrush) window.timelineBrush.clear();
+        if (window.mapVis) window.mapVis.clear();
+        return;
+    }
 
     if (window.donutChart1) {
         window.donutChart1.data = dataToUse;
